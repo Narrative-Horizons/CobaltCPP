@@ -1,0 +1,10 @@
+# Binaries
+/bin/
+/bin-int/
+
+# IDE
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
