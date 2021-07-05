@@ -1,6 +1,8 @@
 #include <cobalt/window.hpp>
 
 #include <iostream>
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 #include <cobalt/input.hpp>
 
@@ -27,7 +29,7 @@ namespace cobalt
 
 		_isOpen = true;
 
-		glfwSetKeyCallback(_glfwWindow, [](GLFWwindow* window, const int32_t aKey, const int32_t aScanCode, const int32_t aAction, const int32_t aMods)
+		glfwSetKeyCallback(static_cast<GLFWwindow*>(_glfwWindow), [](GLFWwindow* window, const int32_t aKey, const int32_t aScanCode, const int32_t aAction, const int32_t aMods)
 		{
 			switch (aAction)
 			{
@@ -67,17 +69,17 @@ namespace cobalt
 
 	void Window::hide() const
 	{
-		glfwHideWindow(_glfwWindow);
+		glfwHideWindow(static_cast<GLFWwindow*>(_glfwWindow));
 	}
 
 	void Window::show() const
 	{
-		glfwShowWindow(_glfwWindow);
+		glfwShowWindow(static_cast<GLFWwindow*>(_glfwWindow));
 	}
 
 	void Window::refresh() const
 	{
-		glfwSwapBuffers(_glfwWindow);
+		glfwSwapBuffers(static_cast<GLFWwindow*>(_glfwWindow));
 	}
 
 	void Window::poll() const
@@ -88,7 +90,7 @@ namespace cobalt
 	void Window::close()
 	{
 		_isOpen = false;
-		glfwSetWindowShouldClose(_glfwWindow, true);
+		glfwSetWindowShouldClose(static_cast<GLFWwindow*>(_glfwWindow), true);
 	}
 
 	bool Window::shouldClose() const
@@ -96,11 +98,18 @@ namespace cobalt
 		return !_isOpen;
 	}
 
+	bool Window::vSyncEnabled() const
+	{
+		return _createInfo.vsync;
+	}
+
 	void* Window::getNativeWindow() const
 	{
 #if defined(PLATFORM_WIN32)
-		return (void*)glfwGetWin32Window(_glfwWindow);
-#endif	
+		return (void*)glfwGetWin32Window(static_cast<GLFWwindow*>(_glfwWindow));
+#else
+#error Platform not defined/unsupported
+#endif
 
 		return nullptr;
 	}

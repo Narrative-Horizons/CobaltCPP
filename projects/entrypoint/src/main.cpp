@@ -4,29 +4,41 @@
 #include <cobalt/window.hpp>
 #include <cobalt/input.hpp>
 
+#include <cobalt/graphics/graphicscontext.hpp>
+
+using namespace cobalt;
+
 int main()
 {
-	cobalt::WindowCreateInfo createInfo;
+	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
 	createInfo.height = 720;
 	createInfo.title = "Cobalt Engine";
 	createInfo.fullscreen = false;
 	createInfo.vsync = true;
 
-	cobalt::Window* window = new cobalt::Window(createInfo);
+	Window* window = new Window(createInfo);
+
+	GraphicsContextCreateInfo gCreateInfo;
+	gCreateInfo.api = GraphicsAPI::Vulkan;
+
+	GraphicsContext* context = new GraphicsContext(*window, gCreateInfo);
 
 	while (!window->shouldClose())
 	{
-		cobalt::Input::update();
+		Input::update();
 
-		if (cobalt::Input::isKeyPressed(COBALT_KEY_ESCAPE))
+		if (Input::isKeyPressed(COBALT_KEY_ESCAPE))
 		{
 			window->close();
 		}
 
 		window->poll();
-		window->refresh();
+		context->present();
 	}
+
+	delete context;
+	delete window;
 
 	//main(instance, NULL, NULL, cmdShow);
 }

@@ -2,9 +2,6 @@
 
 #include <string>
 
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
 #include <cobalt/macros.hpp>
 
 namespace cobalt
@@ -39,6 +36,7 @@ namespace cobalt
 			void poll() const;
 			void close();
 			bool shouldClose() const;
+			bool vSyncEnabled() const;
 
 			void* getNativeWindow() const;
 
@@ -46,6 +44,6 @@ namespace cobalt
 			WindowCreateInfo _createInfo;
 			bool _isOpen;
 
-			GLFWwindow* _glfwWindow;
+			void* _glfwWindow;
 	};
 }
