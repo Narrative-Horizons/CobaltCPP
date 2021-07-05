@@ -95,7 +95,7 @@ namespace cobalt
 
 	bool Window::shouldClose() const
 	{
-		return !_isOpen;
+		return !_isOpen || glfwWindowShouldClose(static_cast<GLFWwindow*>(_glfwWindow));
 	}
 
 	bool Window::vSyncEnabled() const

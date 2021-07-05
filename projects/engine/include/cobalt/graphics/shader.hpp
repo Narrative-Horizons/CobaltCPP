@@ -8,7 +8,8 @@ namespace cobalt
 	class Shader
 	{
 		public:
-			static std::unique_ptr<Shader> createRasterizerShader(std::string_view vertexSource,
+			static std::unique_ptr<Shader> createRasterizerShader(std::string_view name,
+				std::string_view vertexSource,
 				std::string_view pixelSource = std::string_view(),
 				std::string_view geometrySource = std::string_view(),
 				std::string_view hullSource = std::string_view(),
@@ -18,6 +19,8 @@ namespace cobalt
 
 			Shader();
 			~Shader();
+
+			void set(std::string_view name);
 
 		private:
 			struct ShaderImpl;

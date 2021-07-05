@@ -8,7 +8,8 @@ project("Engine")
 
     files({
         "include/**.hpp",
-        "src/**.cpp"
+        "src/**.cpp",
+        "src/**.hpp", -- private headers
     })
 
     includedirs({
