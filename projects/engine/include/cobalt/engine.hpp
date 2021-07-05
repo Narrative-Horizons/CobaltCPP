@@ -2,4 +2,4 @@
 
 #include <Windows.h>
 
-int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow);
+//int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow);

@@ -4,35 +4,8 @@
 #include <iomanip>
 #include <iostream>
 
-#ifndef NOMINMAX
-#    define NOMINMAX
-#endif
 #include <Windows.h>
 #include <crtdbg.h>
-
-#ifndef PLATFORM_WIN32
-#    define PLATFORM_WIN32 1
-#endif
-
-#ifndef ENGINE_DLL
-#    define ENGINE_DLL 1
-#endif
-
-#ifndef D3D11_SUPPORTED
-#    define D3D11_SUPPORTED 1
-#endif
-
-#ifndef D3D12_SUPPORTED
-#    define D3D12_SUPPORTED 1
-#endif
-
-#ifndef GL_SUPPORTED
-#    define GL_SUPPORTED 1
-#endif
-
-#ifndef VULKAN_SUPPORTED
-#    define VULKAN_SUPPORTED 1
-#endif
 
 #include "DiligentCore/Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "DiligentCore/Graphics/GraphicsEngineD3D12/interface/EngineFactoryD3D12.h"
@@ -43,13 +16,9 @@
 #include "DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h"
 #include "DiligentCore/Common/interface/RefCntAutoPtr.hpp"
 
+#include "GLFW/glfw3.h"
+
 using namespace Diligent;
-
-// For this tutorial, we will use simple vertex shader
-// that creates a procedural triangle
-
-// Diligent Engine can use HLSL source on all supported platforms.
-// It will convert HLSL to GLSL in OpenGL mode, while Vulkan backend will compile it directly to SPIRV.
 
 static const char* VSSource = R"(
 struct PSInput 
@@ -360,7 +329,7 @@ std::unique_ptr<Tutorial00App> g_pTheApp;
 
 LRESULT CALLBACK MessageProc(HWND, UINT, WPARAM, LPARAM);
 // Main
-int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
+/*int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 {
 #if defined(_DEBUG) || defined(DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -372,7 +341,7 @@ int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
     if (!g_pTheApp->ProcessCommandLine(cmdLine))
         return -1;
 
-    std::wstring Title(L"Tutorial00: Hello Win32");
+    std::wstring Title(L"Cobalt Engine");
     switch (g_pTheApp->GetDeviceType())
     {
     case RENDER_DEVICE_TYPE_D3D11: Title.append(L" (D3D11)"); break;
@@ -425,7 +394,7 @@ int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
     g_pTheApp.reset();
 
     return (int)msg.wParam;
-}
+}*/
 
 // Called every time the NativeNativeAppBase receives a message
 LRESULT CALLBACK MessageProc(HWND wnd, UINT message, WPARAM wParam, LPARAM lParam)

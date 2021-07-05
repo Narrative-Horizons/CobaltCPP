@@ -13,7 +13,8 @@ project("Engine")
 
     includedirs({
         "%{Dependencies.diligent.include}",
-        "%{Projects.engine.include}"
+        "%{Projects.engine.include}",
+        "%{NativeIncludeDirs.glfw}"
     })
 
     libdirs({
@@ -24,16 +25,27 @@ project("Engine")
         "{COPY} %{Dependencies.diligent.bin} %{binaries}"
     }
 
+    links({
+        "GLFW@3.3.3"
+    })
+
     filter("Debug")
-        
         defines({
-            "DILIGENT_DEBUG"
+            "DILIGENT_DEBUG",
+            "DEBUG"
         })
 
     filter("system:Windows")
 
         defines({
-            "PLATFORM_WIN32"
+            "PLATFORM_WIN32",
+            "GLFW_EXPOSE_NATIVE_WIN32",
+            "D3D11_SUPPORTED",
+            "D3D12_SUPPORTED",
+            "GL_SUPPORTED",
+            "VULKAN_SUPPORTED",
+            "ENGINE_DLL",
+            "NOMINMAX"
         })
 
         links({
@@ -41,7 +53,7 @@ project("Engine")
             "SPIRV-Tools-opt.lib",
             "SPIRV-Tools.lib",
         })
-    
+
     filter({"system:Windows", "Debug"})
 
         links({

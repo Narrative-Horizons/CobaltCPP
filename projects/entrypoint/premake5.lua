@@ -13,14 +13,14 @@ project("Entrypoint")
 
     includedirs({
         "%{Projects.engine.include}",
-        "%{Projects.entrypoint.include}"
+        "%{Projects.entrypoint.include}",
+        "%{NativeIncludeDirs.glfw}"
     })
 
     links({
-        "Engine"
+        "Engine",
     })
 
-    postbuildcommands {
-        
-    }
-    
+    postbuildcommands({
+
+    })

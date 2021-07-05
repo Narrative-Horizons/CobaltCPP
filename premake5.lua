@@ -11,6 +11,10 @@ workspace("Cobalt")
     startproject("entrypoint")
     architecture("x64")
 
+    group "External Dependencies"
+    include "dependencies/GLFW@3.3.3"
+    group ""
+
     include("projects/engine")
     include("projects/entrypoint")
 
@@ -20,7 +24,7 @@ workspace("Cobalt")
         include = "%{sln.location}/dependencies/diligent/include",
         lib = "%{sln.location}/dependencies/diligent/lib/%{cfg.buildcfg}/%{cfg.system}"
     }
-    
+
     Projects = {}
     Projects["engine"] = {
         include = "%{sln.location}/projects/engine/include"
@@ -28,3 +32,6 @@ workspace("Cobalt")
     Projects["entrypoint"] = {
         include = "%{sln.location}/projects/entrypoint/include"
     }
+
+    NativeIncludeDirs = {}
+    NativeIncludeDirs["glfw"] = "%{sln.location}/dependencies/GLFW@3.3.3/include"
