@@ -1,7 +1,6 @@
 #pragma once
 
 #include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
-#include <DiligentCore/Graphics/GraphicsEngineVulkan/interface/EngineFactoryVk.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/DeviceContext.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
@@ -29,9 +28,9 @@ namespace cobalt
 
 			COBALT_NO_COPY_MOVE(GraphicsContextHelper)
 
-			Diligent::RefCntAutoPtr<Diligent::IRenderDevice> getRenderDevice();
-			Diligent::RefCntAutoPtr<Diligent::IDeviceContext> getImmediateContext();
-			Diligent::RefCntAutoPtr<Diligent::ISwapChain> getSwapchain();
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IRenderDevice> getRenderDevice() const;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IDeviceContext> getImmediateContext() const;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::ISwapChain> getSwapchain() const;
 
 		private:
 			const GraphicsContext& _context;

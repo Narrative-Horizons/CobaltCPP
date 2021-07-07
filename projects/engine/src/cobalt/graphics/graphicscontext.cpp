@@ -14,10 +14,10 @@ namespace cobalt
 	{
 		using namespace Diligent;
 
-		_impl = new GraphicsContext::GraphicsContextImpl();
+		_impl = new GraphicsContextImpl();
 		_impl->window = &window;
 		
-		SwapChainDesc SCDesc;
+		SwapChainDesc scDesc;
 
 		switch (createInfo.api)
 		{
@@ -34,12 +34,15 @@ namespace cobalt
 				if (!_impl->swapChain && hWnd != nullptr)
 				{
 					Win32NativeWindow Window { hWnd };
-					pFactoryVk->CreateSwapChainVk(_impl->device, _impl->immediateContext, SCDesc, Window, &_impl->swapChain);
+					pFactoryVk->CreateSwapChainVk(_impl->device, _impl->immediateContext, scDesc, Window, &_impl->swapChain);
 				}
 #endif
 				break;
 			}
 
+			case GraphicsAPI::OpenGL: 
+			case GraphicsAPI::DX11: 
+			case GraphicsAPI::DX12: 
 			default:
 			{
 				std::cerr << "API Currently not supported" << std::endl;

@@ -28,7 +28,7 @@ namespace cobalt
 			static void _setKeyReleased(const uint32_t aKeyCode);
 
 		private:
-			static KeyState sKeyStates[COBALT_KEY_LAST];
-			static KeyState sKeyLastState[COBALT_KEY_LAST];
+			static KeyState _sKeyStates[COBALT_KEY_LAST];
+			static KeyState _sKeyLastState[COBALT_KEY_LAST];
 	};
 }

@@ -15,7 +15,8 @@ project("Engine")
     includedirs({
         "%{Dependencies.diligent.include}",
         "%{Projects.engine.include}",
-        "%{NativeIncludeDirs.glfw}"
+        "%{NativeIncludeDirs.glfw}",
+        "src" -- private headers
     })
 
     libdirs({

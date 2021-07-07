@@ -8,7 +8,7 @@
 
 namespace cobalt
 {
-	Window::Window(WindowCreateInfo createInfo)
+	Window::Window(const WindowCreateInfo& createInfo)
 	{
 		_createInfo = createInfo;
 
@@ -48,6 +48,7 @@ namespace cobalt
 					Input::_setKeyPressed(aKey);
 					break;
 				}
+				default: break;
 			}
 		});
 	}
@@ -106,11 +107,9 @@ namespace cobalt
 	void* Window::getNativeWindow() const
 	{
 #if defined(PLATFORM_WIN32)
-		return (void*)glfwGetWin32Window(static_cast<GLFWwindow*>(_glfwWindow));
+		return static_cast<void*>(glfwGetWin32Window(static_cast<GLFWwindow*>(_glfwWindow)));
 #else
 #error Platform not defined/unsupported
 #endif
-
-		return nullptr;
 	}
 }

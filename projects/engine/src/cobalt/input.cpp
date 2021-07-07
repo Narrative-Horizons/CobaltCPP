@@ -2,39 +2,39 @@
 
 namespace cobalt
 {
-    KeyState Input::sKeyStates[COBALT_KEY_LAST];
-    KeyState Input::sKeyLastState[COBALT_KEY_LAST];
+    KeyState Input::_sKeyStates[COBALT_KEY_LAST];
+    KeyState Input::_sKeyLastState[COBALT_KEY_LAST];
 
     bool Input::isKeyDown(const uint32_t aKeyCode)
     {
-        return sKeyStates[aKeyCode] == KeyState::Down || sKeyStates[aKeyCode] == KeyState::Pressed;
+        return _sKeyStates[aKeyCode] == KeyState::Down || _sKeyStates[aKeyCode] == KeyState::Pressed;
     }
 
     bool Input::isKeyPressed(const uint32_t aKeyCode)
     {
-        return sKeyStates[aKeyCode] == KeyState::Pressed;
+        return _sKeyStates[aKeyCode] == KeyState::Pressed;
     }
 
     bool Input::isKeyUp(const uint32_t aKeyCode)
     {
-        return sKeyStates[aKeyCode] == KeyState::Up;
+        return _sKeyStates[aKeyCode] == KeyState::Up;
     }
 
     void Input::update()
     {
         for (uint32_t i = 0; i < COBALT_KEY_LAST; i++)
         {
-            if (sKeyStates[i] == KeyState::Pressed && sKeyLastState[i] == KeyState::Pressed)
+            if (_sKeyStates[i] == KeyState::Pressed && _sKeyLastState[i] == KeyState::Pressed)
             {
-                sKeyStates[i] = KeyState::Down;
+                _sKeyStates[i] = KeyState::Down;
             }
 
-            if (sKeyStates[i] == KeyState::Up && sKeyLastState[i] == KeyState::Up)
+            if (_sKeyStates[i] == KeyState::Up && _sKeyLastState[i] == KeyState::Up)
             {
-                sKeyStates[i] = KeyState::None;
+                _sKeyStates[i] = KeyState::None;
             }
 
-            sKeyLastState[i] = sKeyStates[i];
+            _sKeyLastState[i] = _sKeyStates[i];
         }
     }
 
@@ -42,10 +42,10 @@ namespace cobalt
     {
         if (aKeyCode < COBALT_KEY_LAST)
         {
-            if (sKeyStates[aKeyCode] == KeyState::Pressed || sKeyStates[aKeyCode] == KeyState::Down)
+            if (_sKeyStates[aKeyCode] == KeyState::Pressed || _sKeyStates[aKeyCode] == KeyState::Down)
                 return;
 
-            sKeyStates[aKeyCode] = KeyState::Pressed;
+            _sKeyStates[aKeyCode] = KeyState::Pressed;
         }
     }
 
@@ -53,7 +53,7 @@ namespace cobalt
     {
         if (aKeyCode < COBALT_KEY_LAST)
         {
-            sKeyStates[aKeyCode] = KeyState::Up;
+            _sKeyStates[aKeyCode] = KeyState::Up;
         }
     }
 }

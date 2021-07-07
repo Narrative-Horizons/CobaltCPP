@@ -17,12 +17,12 @@ namespace cobalt
 		bool vsync;
 	};
 
-	class Window
+	class Window final
 	{
 		public:
 			Window() = default;
-			Window(WindowCreateInfo createInfo);
-			virtual ~Window() = default;
+			explicit Window(const WindowCreateInfo& createInfo);
+			~Window() = default;
 
 			COBALT_NO_COPY_MOVE(Window)
 
@@ -35,10 +35,11 @@ namespace cobalt
 			void refresh() const;
 			void poll() const;
 			void close();
-			bool shouldClose() const;
-			bool vSyncEnabled() const;
+		
+			COBALT_NO_DISCARD bool shouldClose() const;
+			COBALT_NO_DISCARD bool vSyncEnabled() const;
 
-			void* getNativeWindow() const;
+			COBALT_NO_DISCARD void* getNativeWindow() const;
 
 		private:
 			WindowCreateInfo _createInfo;
