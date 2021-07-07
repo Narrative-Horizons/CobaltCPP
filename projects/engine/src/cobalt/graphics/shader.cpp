@@ -12,6 +12,16 @@ namespace cobalt
 		Diligent::PIPELINE_TYPE type;
 		Diligent::RefCntAutoPtr<Diligent::IPipelineState> pipeline;
 		Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> bindings;
+		Diligent::RefCntAutoPtr<Diligent::IShader> vShader;
+		Diligent::RefCntAutoPtr<Diligent::IShader> pShader;
+
+		~ShaderImpl()
+		{
+			vShader.Release();
+			pShader.Release();
+			bindings.Release();
+			pipeline.Release();
+		}
 	};
 
 	Shader::Shader(const GraphicsContext& context, const ShaderCreateInfo& createInfo)
@@ -23,6 +33,21 @@ namespace cobalt
 		ComputePipelineStateCreateInfo computePsoInfo;
 	
 		auto contextHelper = new GraphicsContextHelper(context);
+
+		std::string vertexShaderName = (createInfo.name + " VS");
+		std::string pixelShaderName = (createInfo.name + " PS");
+		std::string computeShaderName = (createInfo.name + " CS");
+		std::string entryPoint = "main";
+
+		constexpr uint32_t vertexLayoutCount = 6;
+		LayoutElement vertexLayouts[vertexLayoutCount] = {
+			LayoutElement{0, 0, 3, VT_FLOAT32, False}, // Position
+			LayoutElement{1, 0, 2, VT_FLOAT32, False}, // UV0
+			LayoutElement{2, 0, 3, VT_FLOAT32, False}, // Normal
+			LayoutElement{3, 0, 3, VT_FLOAT32, False}, // Tangent
+			LayoutElement{4, 0, 3, VT_FLOAT32, False}, // Bitangent
+			LayoutElement{5, 1, 1, VT_UINT32, False, INPUT_ELEMENT_FREQUENCY_PER_INSTANCE} // InstanceID
+		};
 
 		if(!createInfo.computeSource.empty())
 		{
@@ -38,16 +63,14 @@ namespace cobalt
 
 			// Vertex shader
 			shaderCI.Desc.ShaderType = SHADER_TYPE_COMPUTE;
-			shaderCI.EntryPoint = "main";
-			auto* computeShaderName = new char[createInfo.name.size() + 4];
-			strcpy_s(computeShaderName, (createInfo.name + " CS").size(), (createInfo.name + " CS").c_str());
-			shaderCI.Desc.Name = computeShaderName;
+			shaderCI.EntryPoint = entryPoint.c_str();
+			shaderCI.Desc.Name = computeShaderName.c_str();
 			shaderCI.Source = createInfo.vertexSource.c_str();
 
-			RefCntAutoPtr<IShader> pCS;
-			contextHelper->getRenderDevice()->CreateShader(shaderCI, &pCS);
+			RefCntAutoPtr<IShader> cShader;
+			contextHelper->getRenderDevice()->CreateShader(shaderCI, &cShader);
 
-			computePsoInfo.pCS = pCS;
+			computePsoInfo.pCS = cShader;
 		}
 		else
 		{
@@ -56,15 +79,6 @@ namespace cobalt
 			psoDesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
 
 			psoDesc.Name = createInfo.name.c_str();
-
-			constexpr uint32_t vertexLayoutCount = 5;
-			LayoutElement vertexLayouts[vertexLayoutCount] = {
-				LayoutElement{0, 0, 3, VT_FLOAT32, False}, // Position
-				LayoutElement{1, 0, 2, VT_FLOAT32, False}, // UV0
-				LayoutElement{2, 0, 3, VT_FLOAT32, False}, // Normal
-				LayoutElement{3, 0, 3, VT_FLOAT32, False}, // Tangent
-				LayoutElement{4, 0, 3, VT_FLOAT32, False}, // Bitangent
-			};
 
 			graphicsPsoInfo.GraphicsPipeline.InputLayout.NumElements = vertexLayoutCount;
 			graphicsPsoInfo.GraphicsPipeline.InputLayout.LayoutElements = vertexLayouts;
@@ -78,31 +92,24 @@ namespace cobalt
 
 			// Vertex shader
 			shaderCI.Desc.ShaderType = SHADER_TYPE_VERTEX;
-			shaderCI.EntryPoint = "main";
-			auto* vertexShaderName = new char[createInfo.name.size() + 4];
-			strcpy_s(vertexShaderName, (createInfo.name + " VS").size(), (createInfo.name + " VS").c_str());
-			shaderCI.Desc.Name = vertexShaderName;
+			shaderCI.EntryPoint = entryPoint.c_str();
+			shaderCI.Desc.Name = vertexShaderName.c_str();
 			shaderCI.Source = createInfo.vertexSource.c_str();
 			
-			RefCntAutoPtr<IShader> pVS;
-			RefCntAutoPtr<IShader> pPS;
+			contextHelper->getRenderDevice()->CreateShader(shaderCI, &_impl->vShader);
 
-			contextHelper->getRenderDevice()->CreateShader(shaderCI, &pVS);
-
-			graphicsPsoInfo.pVS = pVS;
+			graphicsPsoInfo.pVS = _impl->vShader;
 
 			if(!createInfo.pixelSource.empty())
 			{
 				// Pixel shader
 				shaderCI.Desc.ShaderType = SHADER_TYPE_PIXEL;
-				shaderCI.EntryPoint = "main";
-				auto* pixelShaderName = new char[createInfo.name.size() + 4];
-				strcpy_s(pixelShaderName, (createInfo.name + " PS").size(), (createInfo.name + " PS").c_str());
-				shaderCI.Desc.Name = pixelShaderName;
+				shaderCI.EntryPoint = entryPoint.c_str();
+				shaderCI.Desc.Name = pixelShaderName.c_str();
 				shaderCI.Source = createInfo.pixelSource.c_str();
 
-				contextHelper->getRenderDevice()->CreateShader(shaderCI, &pPS);
-				graphicsPsoInfo.pPS = pPS;
+				contextHelper->getRenderDevice()->CreateShader(shaderCI, &_impl->pShader);
+				graphicsPsoInfo.pPS = _impl->pShader;
 			}
 		}
 

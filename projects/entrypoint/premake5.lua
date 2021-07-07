@@ -6,6 +6,8 @@ project("Entrypoint")
     targetdir(binaries)
     objdir(intermediate)
 
+    debugdir("../../")
+
     files({
         "include/**.hpp",
         "src/**.cpp"

@@ -59,6 +59,8 @@ namespace cobalt
 			Shader(const GraphicsContext& context, const ShaderCreateInfo& createInfo);
 			~Shader();
 
+			//void setBuffer()
+
 		private:
 			struct ShaderImpl;
 			ShaderImpl* _impl;

@@ -26,6 +26,8 @@ namespace cobalt
 				GetEngineFactoryVkType GetEngineFactoryVk = LoadGraphicsEngineVk();
 				EngineVkCreateInfo EngineCI;
 
+				_impl->deviceType = RENDER_DEVICE_TYPE_VULKAN;
+
 				IEngineFactoryVk* pFactoryVk = GetEngineFactoryVk();
 				pFactoryVk->CreateDeviceAndContextsVk(EngineCI, &_impl->device, &_impl->immediateContext);
 
