@@ -18,13 +18,15 @@ int main()
 	createInfo.fullscreen = false;
 	createInfo.vsync = true;
 
-	std::unique_ptr<Window> window = std::make_unique<Window>(createInfo);
-
+	//std::unique_ptr<Window> window = std::make_unique<Window>(createInfo);
+	Window* window = new Window(createInfo);
+	
 	GraphicsContextCreateInfo gCreateInfo;
 	gCreateInfo.api = GraphicsAPI::Vulkan;
 
-	std::unique_ptr<GraphicsContext> context = std::make_unique<GraphicsContext>(*window, gCreateInfo);
-
+	//std::unique_ptr<GraphicsContext> context = std::make_unique<GraphicsContext>(*window, gCreateInfo);
+	GraphicsContext* context = new GraphicsContext(*window, gCreateInfo);
+	
 	std::ifstream vFile("data/shaders/pbr_vs.hlsl");
 	std::string vSource((std::istreambuf_iterator<char>(vFile)),
 		std::istreambuf_iterator<char>());
@@ -38,8 +40,9 @@ int main()
 	shaderCI.vertexSource = vSource;
 	shaderCI.pixelSource = pSource;
 	
-	std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCI);
-
+	//std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCI);
+	Shader* shader = new Shader(*context, shaderCI);
+	
 	while (!window->shouldClose())
 	{
 		Input::update();
@@ -53,5 +56,9 @@ int main()
 		context->present();
 	}
 
-	shader = nullptr;
+	delete shader;
+	delete context;
+	delete window;
+
+	//shader = nullptr;
 }
