@@ -18,19 +18,12 @@ namespace cobalt
 		Diligent::RENDER_DEVICE_TYPE						deviceType = Diligent::RENDER_DEVICE_TYPE_D3D11;
 
 		const Window* window;
-
-		~GraphicsContextImpl()
-		{
-			//swapChain.Release();
-			//immediateContext.Release();
-			//device.Release();
-		}
 	};
 
 	class GraphicsContextHelper
 	{
 		public:
-			GraphicsContextHelper(const GraphicsContext& context);
+			explicit GraphicsContextHelper(const GraphicsContext& context);
 			~GraphicsContextHelper() = default;
 
 			COBALT_NO_COPY_MOVE(GraphicsContextHelper)

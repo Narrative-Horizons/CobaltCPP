@@ -24,7 +24,7 @@ namespace cobalt
 		}
 	};
 
-	Shader::Shader(const GraphicsContext& context, const ShaderCreateInfo& createInfo)
+	Shader::Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo)
 	{
 		_impl = new ShaderImpl;
 
@@ -48,10 +48,6 @@ namespace cobalt
 			LayoutElement{4, 0, 3, VT_FLOAT32, False}, // Bitangent
 			LayoutElement{5, 1, 1, VT_UINT32, False, INPUT_ELEMENT_FREQUENCY_PER_INSTANCE} // InstanceID
 		};
-
-		graphicsPsoInfo.GraphicsPipeline.NumRenderTargets = 1;
-		graphicsPsoInfo.GraphicsPipeline.RTVFormats[0] = contextHelper->getSwapchain()->GetDesc().ColorBufferFormat;
-		graphicsPsoInfo.GraphicsPipeline.DSVFormat = contextHelper->getSwapchain()->GetDesc().DepthBufferFormat;
 
 		if(!createInfo.computeSource.empty())
 		{
@@ -79,6 +75,23 @@ namespace cobalt
 		else
 		{
 			// This is not a compute shader
+			if(createInfo.renderTargetFormats.empty())
+			{
+				// Use swapchain
+				createInfo.renderTargetFormats.push_back(static_cast<TextureFormat>(contextHelper->getSwapchain()->GetDesc().ColorBufferFormat));
+				createInfo.depthTargetFormat = static_cast<TextureFormat>(contextHelper->getSwapchain()->GetDesc().DepthBufferFormat);
+			}
+			
+			graphicsPsoInfo.GraphicsPipeline.NumRenderTargets = static_cast<uint8_t>(createInfo.renderTargetFormats.size())
+			;
+			uint32_t idx = 0;
+			for(const auto& rtFormat : createInfo.renderTargetFormats)
+			{
+				graphicsPsoInfo.GraphicsPipeline.RTVFormats[idx++] = static_cast<TEXTURE_FORMAT>(rtFormat);
+			}
+
+			graphicsPsoInfo.GraphicsPipeline.DSVFormat = static_cast<TEXTURE_FORMAT>(createInfo.depthTargetFormat);
+			
 			PipelineStateDesc& psoDesc = graphicsPsoInfo.PSODesc;
 			psoDesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
 

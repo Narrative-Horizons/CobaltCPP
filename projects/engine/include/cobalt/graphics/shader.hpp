@@ -41,7 +41,7 @@ namespace cobalt
 		std::string computeSource;
 		
 		std::vector<TextureFormat> renderTargetFormats;
-		TextureFormat depthTargetFormat;
+		TextureFormat depthTargetFormat = TextureFormat::UNKNOWN;
 		PrimitiveTopology primitiveTopology;
 		CullMode cullMode;
 		FillMode fillMode;
@@ -55,7 +55,7 @@ namespace cobalt
 	class Shader final
 	{
 		public:
-			Shader(const GraphicsContext& context, const ShaderCreateInfo& createInfo);
+			Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo);
 			~Shader();
 
 			//void setBuffer()

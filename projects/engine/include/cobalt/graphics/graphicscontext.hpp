@@ -1,10 +1,13 @@
 #pragma once
 
 #include <cobalt/window.hpp>
-#include <cobalt/graphics/graphicscontext.hpp>
+
+#include <cobalt/graphics/graphicsenums.hpp>
+#include <cobalt/graphics/framebuffer.hpp>
 
 namespace cobalt
 {
+	class Shader;
 	enum class GraphicsAPI
 	{
 		Vulkan,
@@ -28,6 +31,12 @@ namespace cobalt
 
 			GraphicsContext(GraphicsContext&& other) noexcept;
 			GraphicsContext& operator=(GraphicsContext&& other) noexcept;
+
+			void setRenderTarget(Framebuffer& framebuffer, ResourceStateTransitionMode transitionMode) const;
+			void clearRenderTarget();
+			void clearDepthStencil();
+
+			void setPipelineState(Shader& shader);
 
 			void present() const;
 

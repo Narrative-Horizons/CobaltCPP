@@ -290,3 +290,10 @@ enum class ComparisonFunction : uint8_t
 	ALWAYS,
 	NUM_FUNCTIONS
 };
+
+enum class ResourceStateTransitionMode : uint8_t
+{
+	NONE = 0,
+	TRANSITION,
+	VERIFY
+};

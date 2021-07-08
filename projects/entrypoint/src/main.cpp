@@ -7,8 +7,6 @@
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
 
-#include <Windows.h>
-
 using namespace cobalt;
 
 /*
@@ -21,7 +19,9 @@ int WINAPI WinMain(HINSTANCE instance,
 {
 	main(instance, NULL, NULL, nShowCmd);
 	*/
-int main() {
+
+int main()
+{
 	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
 	createInfo.height = 720;
@@ -29,14 +29,12 @@ int main() {
 	createInfo.fullscreen = false;
 	createInfo.vsync = true;
 
-	//std::unique_ptr<Window> window = std::make_unique<Window>(createInfo);
-	Window* window = new Window(createInfo);
+	std::unique_ptr<Window> window = std::make_unique<Window>(createInfo);
 	
 	GraphicsContextCreateInfo gCreateInfo;
 	gCreateInfo.api = GraphicsAPI::Vulkan;
 
-	//std::unique_ptr<GraphicsContext> context = std::make_unique<GraphicsContext>(*window, gCreateInfo);
-	GraphicsContext* context = new GraphicsContext(*window, gCreateInfo);
+	std::unique_ptr<GraphicsContext> context = std::make_unique<GraphicsContext>(*window, gCreateInfo);
 	
 	std::ifstream vFile("data/shaders/pbr_vs.hlsl");
 	std::string vSource((std::istreambuf_iterator<char>(vFile)),
@@ -46,13 +44,12 @@ int main() {
 	std::string pSource((std::istreambuf_iterator<char>(pFile)),
 		std::istreambuf_iterator<char>());
 	
-	ShaderCreateInfo shaderCI;
-	shaderCI.name = "PBR";
-	shaderCI.vertexSource = vSource;
-	shaderCI.pixelSource = pSource;
+	ShaderCreateInfo shaderCi;
+	shaderCi.name = "PBR";
+	shaderCi.vertexSource = vSource;
+	shaderCi.pixelSource = pSource;
 	
-	//std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCI);
-	Shader* shader = new Shader(*context, shaderCI);
+	std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCi);
 	
 	while (!window->shouldClose())
 	{
@@ -66,10 +63,4 @@ int main() {
 		window->poll();
 		context->present();
 	}
-
-	delete shader;
-	delete context;
-	delete window;
-
-	//shader = nullptr;
 }

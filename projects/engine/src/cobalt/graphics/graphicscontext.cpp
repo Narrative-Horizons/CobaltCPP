@@ -7,6 +7,9 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
 
 #include "graphicscontexthelper.hpp"
+#include "framebufferhelper.hpp"
+
+#include <cobalt/graphics/shader.hpp>
 
 namespace cobalt
 {
@@ -83,7 +86,23 @@ namespace cobalt
 
 		return *this;
 	}
-	
+
+	void GraphicsContext::setRenderTarget(Framebuffer& framebuffer, ResourceStateTransitionMode transitionMode) const
+	{
+		FramebufferHelper* framebufferHelper = new FramebufferHelper(framebuffer);
+		const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
+		
+		_impl->immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer.getInfo().renderTargets.size()),
+			framebufferHelper->getRenderTargets(currentFrame),
+			framebufferHelper->getDepthTarget(currentFrame),
+			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
+	}
+
+	void GraphicsContext::setPipelineState(Shader& shader)
+	{
+		
+	}
+
 	void GraphicsContext::present() const
 	{
 		_impl->swapChain->Present(static_cast<uint32_t>(_impl->window->vSyncEnabled()));
