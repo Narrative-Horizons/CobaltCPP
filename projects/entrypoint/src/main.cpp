@@ -7,10 +7,21 @@
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
 
+#include <Windows.h>
+
 using namespace cobalt;
 
-int main()
+/*
+extern int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow);
+
+int WINAPI WinMain(HINSTANCE instance,
+	HINSTANCE hPrevInstance,
+	LPSTR     lpCmdLine,
+	int       nShowCmd)
 {
+	main(instance, NULL, NULL, nShowCmd);
+	*/
+int main() {
 	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
 	createInfo.height = 720;

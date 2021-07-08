@@ -1,5 +1,7 @@
 #include <cobalt/engine.hpp>
 
+#include <Windows.h>
+
 #include <memory>
 #include <iomanip>
 #include <iostream>
@@ -90,11 +92,12 @@ private:
     RENDER_DEVICE_TYPE            m_DeviceType = RENDER_DEVICE_TYPE_D3D11;
 };
 
-std::unique_ptr<Tutorial00App> gPTheApp;
+std::unique_ptr<Tutorial00App> g_pTheApp;
 
-LRESULT CALLBACK messageProc(HWND, UINT, WPARAM, LPARAM);
-// Main
-/*int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
+LRESULT CALLBACK MessageProc(HWND, UINT, WPARAM, LPARAM);
+//Main
+/*
+int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow)
 {
 #if defined(_DEBUG) || defined(DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -159,7 +162,8 @@ LRESULT CALLBACK messageProc(HWND, UINT, WPARAM, LPARAM);
     g_pTheApp.reset();
 
     return (int)msg.wParam;
-}*/
+}
+*/
 
 Tutorial00App::Tutorial00App()
 {
@@ -429,9 +433,9 @@ LRESULT CALLBACK MessageProc(HWND wnd, UINT message, WPARAM wParam, LPARAM lPara
         return 0;
     }
     case WM_SIZE: // Window size has been changed
-        if (gPTheApp)
+        if (g_pTheApp)
         {
-            gPTheApp->WindowResize(LOWORD(lParam), HIWORD(lParam));
+			g_pTheApp->WindowResize(LOWORD(lParam), HIWORD(lParam));
         }
         return 0;
 

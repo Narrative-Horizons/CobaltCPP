@@ -49,6 +49,10 @@ namespace cobalt
 			LayoutElement{5, 1, 1, VT_UINT32, False, INPUT_ELEMENT_FREQUENCY_PER_INSTANCE} // InstanceID
 		};
 
+		graphicsPsoInfo.GraphicsPipeline.NumRenderTargets = 1;
+		graphicsPsoInfo.GraphicsPipeline.RTVFormats[0] = contextHelper->getSwapchain()->GetDesc().ColorBufferFormat;
+		graphicsPsoInfo.GraphicsPipeline.DSVFormat = contextHelper->getSwapchain()->GetDesc().DepthBufferFormat;
+
 		if(!createInfo.computeSource.empty())
 		{
 			// This is a compute shader

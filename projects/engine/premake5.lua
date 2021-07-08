@@ -52,6 +52,7 @@ project("Engine")
 
         links({
             "DiligentCore.lib",
+            "DiligentFX.lib",
             "SPIRV-Tools-opt.lib",
             "SPIRV-Tools.lib",
         })
