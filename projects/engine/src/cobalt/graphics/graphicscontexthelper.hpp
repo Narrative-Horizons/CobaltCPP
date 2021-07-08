@@ -1,9 +1,9 @@
 #pragma once
 
-#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/DeviceContext.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
+#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
 
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/macros.hpp>
@@ -21,9 +21,9 @@ namespace cobalt
 
 		~GraphicsContextImpl()
 		{
-			swapChain.Release();
-			immediateContext.Release();
-			device.Release();
+			//swapChain.Release();
+			//immediateContext.Release();
+			//device.Release();
 		}
 	};
 

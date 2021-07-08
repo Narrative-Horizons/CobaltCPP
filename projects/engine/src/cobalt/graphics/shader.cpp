@@ -17,10 +17,10 @@ namespace cobalt
 
 		~ShaderImpl()
 		{
-			vShader.Release();
-			pShader.Release();
-			bindings.Release();
-			pipeline.Release();
+			//vShader.Release();
+			//pShader.Release();
+			//bindings.Release();
+			//pipeline.Release();
 		}
 	};
 

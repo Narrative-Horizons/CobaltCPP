@@ -31,8 +31,15 @@ struct VSOut
     uint instanceID;
 };
 
-void main(in float3 iPosition : ATTRIB0, in float2 iUV : ATTRIB1, in float3 iNormal : ATTRIB2, in float3 iTangent : ATTRIB3,
-                in float3 iBitangent : ATTRIB4, in uint instanceID : ATTRIB5, out float4 oPosition : SV_Position, out VSOut vsOutput)
+void main(in float3 iPosition : ATTRIB0,
+            in float2 iUV : ATTRIB1,
+            in float3 iNormal : ATTRIB2,
+            in float3 iTangent : ATTRIB3,
+            in float3 iBitangent : ATTRIB4,
+            in uint instanceID : ATTRIB5,
+
+            out float4 oPosition : SV_Position,
+            out VSOut vsOutput)
 {
     ObjectData data = oData[instanceID];
     MaterialData material = mData[instanceID];

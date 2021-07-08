@@ -19,10 +19,10 @@ namespace cobalt
 
 		ShaderResourceDesc() noexcept = default;
 
-		ShaderResourceDesc(ShaderType shaderStages,
-			const std::string& name,
-			ShaderResourceType type,
-			ShaderVariableFlags flags = ShaderVariableFlags::NONE) noexcept :
+		ShaderResourceDesc(const ShaderType shaderStages,
+		                   const std::string& name,
+		                   const ShaderResourceType type,
+		                   const ShaderVariableFlags flags = ShaderVariableFlags::NONE) noexcept :
 				shaderStages{ shaderStages },
 				name{ name },
 				type{ type },
@@ -49,7 +49,6 @@ namespace cobalt
 		bool depthWrite;
 
 		std::vector<ShaderResourceDesc> shaderResources;
-
 		std::vector<ImmutableSampler> immutableSamplers;
 	};
 	
