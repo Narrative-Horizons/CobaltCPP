@@ -297,3 +297,42 @@ enum class ResourceStateTransitionMode : uint8_t
 	TRANSITION,
 	VERIFY
 };
+
+enum class SetVertexBufferFlags : uint8_t
+{
+	NONE = 0,
+	RESET = 0x01
+};
+COBALT_DEFINE_FLAG_ENUM_OPERATORS(SetVertexBufferFlags)
+
+enum class ClearDepthStencilFlags : uint32_t
+{
+	NONE = 0x00,
+	DEPTH = 0x01,
+	STENCIL = 0x02
+};
+COBALT_DEFINE_FLAG_ENUM_OPERATORS(ClearDepthStencilFlags)
+
+enum class ValueType : uint8_t
+{
+	UNDEFINED = 0,
+	INT8,         
+	INT16,        
+	INT32,        
+	UINT8,        
+	UINT16,       
+	UINT32,       
+	FLOAT16,      
+	FLOAT32,      
+	NUM_TYPES     
+};
+
+enum class DrawFlags : uint8_t
+{
+	NONE = 0x00,
+	VERIFY_STATES = 0x01,
+	VERIFY_DRAW_ATTRIBS = 0x02,
+	VERIFY_RENDER_TARGETS = 0x04,
+	VERIFY_ALL = VERIFY_STATES | VERIFY_DRAW_ATTRIBS | VERIFY_RENDER_TARGETS,
+	DYNAMIC_RESOURCE_BUFFERS_INTACT = 0x08
+};

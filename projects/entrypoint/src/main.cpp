@@ -6,6 +6,8 @@
 
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
+#include <cobalt/graphics/vertexbuffer.hpp>
+#include <cobalt/graphics/indexbuffer.hpp>
 
 using namespace cobalt;
 
@@ -36,11 +38,11 @@ int main()
 
 	std::unique_ptr<GraphicsContext> context = std::make_unique<GraphicsContext>(*window, gCreateInfo);
 	
-	std::ifstream vFile("data/shaders/pbr_vs.hlsl");
+	std::ifstream vFile("data/shaders/triangle_vs.hlsl");
 	std::string vSource((std::istreambuf_iterator<char>(vFile)),
 		std::istreambuf_iterator<char>());
 
-	std::ifstream pFile("data/shaders/pbr_ps.hlsl");
+	std::ifstream pFile("data/shaders/triangle_ps.hlsl");
 	std::string pSource((std::istreambuf_iterator<char>(pFile)),
 		std::istreambuf_iterator<char>());
 	
@@ -48,8 +50,27 @@ int main()
 	shaderCi.name = "PBR";
 	shaderCi.vertexSource = vSource;
 	shaderCi.pixelSource = pSource;
+	shaderCi.cullMode = CullMode::BACK;
+	shaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
 	
 	std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCi);
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		 0.0f,  0.5f, 0.0f
+	};
+
+	uint32_t indices[] = {
+		2, 1, 0
+	};
+
+	std::unique_ptr<VertexBuffer> vertexBuffer = std::make_unique<VertexBuffer>(*context, vertices, sizeof(vertices));
+	std::unique_ptr<IndexBuffer> indexBuffer = std::make_unique<IndexBuffer>(*context, indices, sizeof(indices));
+
+	std::vector<VertexBuffer*> buffers;
+	buffers.push_back(vertexBuffer.get());
+	uint32_t offset = 0;
 	
 	while (!window->shouldClose())
 	{
@@ -59,6 +80,27 @@ int main()
 		{
 			window->close();
 		}
+
+		context->setRenderTarget(nullptr, ResourceStateTransitionMode::TRANSITION);
+		
+		const float clearColor[] = { 0.350f, 0.350f, 0.350f, 1.0f };
+		context->clearRenderTarget(nullptr, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
+		context->clearDepthStencil(nullptr, ClearDepthStencilFlags::DEPTH, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
+
+		context->setVertexBuffers(0, buffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
+		context->setIndexBuffer(*indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
+
+		context->setPipelineState(*shader);
+
+		// Commit shader resources
+
+		// Draw command
+		DrawIndexedAttributes attr;
+		attr.indexType = ValueType::UINT32;
+		attr.numIndices = 3;
+		attr.flags = DrawFlags::VERIFY_ALL;
+
+		context->drawIndexed(attr);
 
 		window->poll();
 		context->present();

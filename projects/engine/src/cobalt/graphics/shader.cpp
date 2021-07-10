@@ -5,25 +5,10 @@
 
 #include <cobalt/graphics/graphicscontexthelper.hpp>
 
+#include "shaderhelper.hpp"
+
 namespace cobalt
 {
-	struct Shader::ShaderImpl
-	{
-		Diligent::PIPELINE_TYPE type;
-		Diligent::RefCntAutoPtr<Diligent::IPipelineState> pipeline;
-		Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> bindings;
-		Diligent::RefCntAutoPtr<Diligent::IShader> vShader;
-		Diligent::RefCntAutoPtr<Diligent::IShader> pShader;
-
-		~ShaderImpl()
-		{
-			//vShader.Release();
-			//pShader.Release();
-			//bindings.Release();
-			//pipeline.Release();
-		}
-	};
-
 	Shader::Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo)
 	{
 		_impl = new ShaderImpl;
@@ -39,14 +24,14 @@ namespace cobalt
 		std::string computeShaderName = (createInfo.name + " CS");
 		std::string entryPoint = "main";
 
-		constexpr uint32_t vertexLayoutCount = 6;
+		constexpr uint32_t vertexLayoutCount = 1;
 		LayoutElement vertexLayouts[vertexLayoutCount] = {
 			LayoutElement{0, 0, 3, VT_FLOAT32, False}, // Position
-			LayoutElement{1, 0, 2, VT_FLOAT32, False}, // UV0
-			LayoutElement{2, 0, 3, VT_FLOAT32, False}, // Normal
-			LayoutElement{3, 0, 3, VT_FLOAT32, False}, // Tangent
-			LayoutElement{4, 0, 3, VT_FLOAT32, False}, // Bitangent
-			LayoutElement{5, 1, 1, VT_UINT32, False, INPUT_ELEMENT_FREQUENCY_PER_INSTANCE} // InstanceID
+			//LayoutElement{1, 0, 2, VT_FLOAT32, False}, // UV0
+			//LayoutElement{2, 0, 3, VT_FLOAT32, False}, // Normal
+			//LayoutElement{3, 0, 3, VT_FLOAT32, False}, // Tangent
+			//LayoutElement{4, 0, 3, VT_FLOAT32, False}, // Bitangent
+			//LayoutElement{5, 1, 1, VT_UINT32, False, INPUT_ELEMENT_FREQUENCY_PER_INSTANCE} // InstanceID
 		};
 
 		if(!createInfo.computeSource.empty())
@@ -96,6 +81,11 @@ namespace cobalt
 			psoDesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
 
 			psoDesc.Name = createInfo.name.c_str();
+
+			graphicsPsoInfo.GraphicsPipeline.PrimitiveTopology = static_cast<PRIMITIVE_TOPOLOGY>(createInfo.primitiveTopology);
+			graphicsPsoInfo.GraphicsPipeline.RasterizerDesc.CullMode = static_cast<CULL_MODE>(createInfo.cullMode);
+			graphicsPsoInfo.GraphicsPipeline.DepthStencilDesc.DepthEnable = createInfo.depthEnable;
+			graphicsPsoInfo.GraphicsPipeline.DepthStencilDesc.DepthWriteEnable = createInfo.depthWrite;
 
 			graphicsPsoInfo.GraphicsPipeline.InputLayout.NumElements = vertexLayoutCount;
 			graphicsPsoInfo.GraphicsPipeline.InputLayout.LayoutElements = vertexLayouts;
