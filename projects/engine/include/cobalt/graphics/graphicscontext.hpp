@@ -51,6 +51,8 @@ namespace cobalt
 			void clearDepthStencil(const std::unique_ptr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, float depth, uint8_t stencil, ResourceStateTransitionMode transitionMode) const;
 
 			void setPipelineState(Shader& shader) const;
+			void commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode) const;
+		
 			void setVertexBuffers(uint32_t start, const std::vector<VertexBuffer*>& buffers, uint32_t* offsets, 
 									ResourceStateTransitionMode transitionMode, SetVertexBufferFlags flags) const;
 			void setIndexBuffer(IndexBuffer& buffer, uint32_t byteOffset, ResourceStateTransitionMode transitionMode) const;

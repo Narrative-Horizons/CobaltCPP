@@ -52,7 +52,7 @@ int main()
 	shaderCi.pixelSource = pSource;
 	shaderCi.cullMode = CullMode::BACK;
 	shaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
-	
+
 	std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCi);
 
 	float vertices[] = {
@@ -91,8 +91,7 @@ int main()
 		context->setIndexBuffer(*indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
 
 		context->setPipelineState(*shader);
-
-		// Commit shader resources
+		context->commitShaderResources(*shader, ResourceStateTransitionMode::TRANSITION);
 
 		// Draw command
 		DrawIndexedAttributes attr;

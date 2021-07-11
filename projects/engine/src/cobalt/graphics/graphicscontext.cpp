@@ -151,8 +151,13 @@ namespace cobalt
 	void GraphicsContext::setPipelineState(Shader& shader) const
 	{
 		ShaderHelper* shaderHelper = new ShaderHelper(shader);
-		auto x = shaderHelper->getPipeline();
-		_impl->immediateContext->SetPipelineState(x);
+		_impl->immediateContext->SetPipelineState(shaderHelper->getPipeline());
+	}
+
+	void GraphicsContext::commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode) const
+	{
+		ShaderHelper* shaderHelper = new ShaderHelper(shader);
+		_impl->immediateContext->CommitShaderResources(shaderHelper->getResourceBinding(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 	}
 
 	void GraphicsContext::setVertexBuffers(const uint32_t start, const std::vector<VertexBuffer*>& buffers, uint32_t* offsets,

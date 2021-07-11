@@ -161,6 +161,16 @@ namespace cobalt
 		else
 		{
 			contextHelper->getRenderDevice()->CreateGraphicsPipelineState(graphicsPsoInfo, &_impl->pipeline);
+
+			for (const auto& resource : createInfo.shaderResources)
+			{
+				if(resource.type == ShaderResourceType::STATIC)
+				{
+					_impl->pipeline->GetStaticVariableByName(static_cast<SHADER_TYPE>(resource.shaderStages), resource.name.c_str())->Set()
+				}
+			}
+			
+			_impl->pipeline->CreateShaderResourceBinding(&_impl->srb, true);
 		}
 	}
 

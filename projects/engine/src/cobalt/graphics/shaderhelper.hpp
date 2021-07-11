@@ -18,6 +18,7 @@ namespace cobalt
 		Diligent::RefCntAutoPtr<Diligent::IShader> vShader;
 		Diligent::RefCntAutoPtr<Diligent::IShader> pShader;
 		Diligent::RefCntAutoPtr<Diligent::IShader> cShader;
+		Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> srb;
 	};
 
 	class ShaderHelper
@@ -30,6 +31,7 @@ namespace cobalt
 		COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShader> getVertexShader() const;
 		COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShader> getPixelShader() const;
 		COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShader> getComputeShader() const;
+		COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> getResourceBinding() const;
 
 	private:
 		const Shader& _shader;

@@ -28,4 +28,9 @@ namespace cobalt
 	{
 		return _shader._impl->cShader;
 	}
+
+	Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> ShaderHelper::getResourceBinding() const
+	{
+		return _shader._impl->srb;
+	}
 }
