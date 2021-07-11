@@ -166,7 +166,7 @@ namespace cobalt
 			{
 				if(resource.type == ShaderResourceType::STATIC)
 				{
-					_impl->pipeline->GetStaticVariableByName(static_cast<SHADER_TYPE>(resource.shaderStages), resource.name.c_str())->Set()
+					//_impl->pipeline->GetStaticVariableByName(static_cast<SHADER_TYPE>(resource.shaderStages), resource.name.c_str())->Set()
 				}
 			}
 			
