@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 
+#include <cobalt/containers/smartpointers.hpp>
 #include <cobalt/window.hpp>
 #include <cobalt/input.hpp>
 
