@@ -172,7 +172,7 @@ namespace cobalt
 	inline UniquePtr<T>::UniquePtr(UniquePtr&& ptr) noexcept
 		: _payload(ptr._payload)
 	{
-		_payload = nullptr;
+		ptr._payload = nullptr;
 	}
 
 	template<typename T>
