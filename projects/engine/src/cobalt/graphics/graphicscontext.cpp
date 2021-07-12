@@ -101,12 +101,12 @@ namespace cobalt
 		}
 		else
 		{
-			FramebufferHelper* framebufferHelper = new FramebufferHelper(*framebuffer);
+			FramebufferHelper framebufferHelper(*framebuffer);
 			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
 			_impl->immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer->getInfo().renderTargets.size()),
-				framebufferHelper->getRenderTargets(currentFrame),
-				framebufferHelper->getDepthTarget(currentFrame),
+				framebufferHelper.getRenderTargets(currentFrame),
+				framebufferHelper.getDepthTarget(currentFrame),
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
@@ -121,10 +121,10 @@ namespace cobalt
 		}
 		else
 		{
-			FramebufferHelper* framebufferHelper = new FramebufferHelper(*framebuffer);
+			FramebufferHelper framebufferHelper(*framebuffer);
 			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
-			_impl->immediateContext->ClearRenderTarget(framebufferHelper->getRenderTarget(currentFrame, index), rgba,
+			_impl->immediateContext->ClearRenderTarget(framebufferHelper.getRenderTarget(currentFrame, index), rgba,
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
@@ -140,18 +140,18 @@ namespace cobalt
 		}
 		else
 		{
-			FramebufferHelper* framebufferHelper = new FramebufferHelper(*framebuffer);
+			FramebufferHelper framebufferHelper(*framebuffer);
 			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
-			_impl->immediateContext->ClearDepthStencil(framebufferHelper->getDepthTarget(currentFrame),
+			_impl->immediateContext->ClearDepthStencil(framebufferHelper.getDepthTarget(currentFrame),
 				static_cast<Diligent::CLEAR_DEPTH_STENCIL_FLAGS>(flags), depth, stencil, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
 
 	void GraphicsContext::setPipelineState(Shader& shader) const
 	{
-		ShaderHelper* shaderHelper = new ShaderHelper(shader);
-		auto x = shaderHelper->getPipeline();
+		ShaderHelper shaderHelper(shader);
+		auto x = shaderHelper.getPipeline();
 		_impl->immediateContext->SetPipelineState(x);
 	}
 
@@ -161,8 +161,8 @@ namespace cobalt
 		std::vector<Diligent::IBuffer*> diligentBuffers;
 		for(VertexBuffer* buf : buffers)
 		{
-			VertexBufferHelper* bufferHelper = new VertexBufferHelper(*buf);
-			diligentBuffers.push_back(bufferHelper->getBuffer());
+			VertexBufferHelper bufferHelper(*buf);
+			diligentBuffers.push_back(bufferHelper.getBuffer());
 		}
 		
 		_impl->immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), &diligentBuffers[0], offsets,
@@ -172,8 +172,8 @@ namespace cobalt
 	void GraphicsContext::setIndexBuffer(IndexBuffer& buffer, const uint32_t byteOffset,
 		ResourceStateTransitionMode transitionMode) const
 	{
-		IndexBufferHelper* bufferHelper = new IndexBufferHelper(buffer);
-		_impl->immediateContext->SetIndexBuffer(bufferHelper->getBuffer(), byteOffset, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
+		IndexBufferHelper bufferHelper(buffer);
+		_impl->immediateContext->SetIndexBuffer(bufferHelper.getBuffer(), byteOffset, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 	}
 
 	void GraphicsContext::drawIndexed(const DrawIndexedAttributes& attribs) const
