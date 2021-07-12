@@ -32,7 +32,7 @@ int main()
 	createInfo.fullscreen = false;
 	createInfo.vsync = true;
 
-	UniquePtr<Window> window = make_unique<Window>(createInfo);
+	UniquePtr<Window> window = MakeUnique<Window>(createInfo);
 	
 	GraphicsContextCreateInfo gCreateInfo;
 	gCreateInfo.api = GraphicsAPI::Vulkan;
