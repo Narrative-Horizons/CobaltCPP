@@ -8,6 +8,8 @@
 #include <cobalt/graphics/vertexbuffer.hpp>
 #include <cobalt/graphics/indexbuffer.hpp>
 
+#include <cobalt/containers/smartpointers.hpp>
+
 namespace cobalt
 {
 	class Shader;
@@ -46,9 +48,9 @@ namespace cobalt
 			GraphicsContext(GraphicsContext&& other) noexcept;
 			GraphicsContext& operator=(GraphicsContext&& other) noexcept;
 
-			void setRenderTarget(const std::unique_ptr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode) const;
-			void clearRenderTarget(const std::unique_ptr<Framebuffer>& framebuffer, uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode) const;
-			void clearDepthStencil(const std::unique_ptr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, float depth, uint8_t stencil, ResourceStateTransitionMode transitionMode) const;
+			void setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode) const;
+			void clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode) const;
+			void clearDepthStencil(const UniquePtr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, float depth, uint8_t stencil, ResourceStateTransitionMode transitionMode) const;
 
 			void setPipelineState(Shader& shader) const;
 			void commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode) const;

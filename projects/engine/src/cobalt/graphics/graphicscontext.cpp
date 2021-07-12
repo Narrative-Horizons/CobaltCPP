@@ -90,7 +90,7 @@ namespace cobalt
 		return *this;
 	}
 
-	void GraphicsContext::setRenderTarget(const std::unique_ptr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode) const
+	void GraphicsContext::setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode) const
 	{
 		if (framebuffer == nullptr)
 		{
@@ -111,7 +111,7 @@ namespace cobalt
 		}
 	}
 
-	void GraphicsContext::clearRenderTarget(const std::unique_ptr<Framebuffer>& framebuffer, const uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode) const
+	void GraphicsContext::clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, const uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode) const
 	{
 		if(framebuffer == nullptr)
 		{
@@ -129,7 +129,7 @@ namespace cobalt
 		}
 	}
 
-	void GraphicsContext::clearDepthStencil(const std::unique_ptr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, const float depth,
+	void GraphicsContext::clearDepthStencil(const UniquePtr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, const float depth,
 	                                        const uint8_t stencil, ResourceStateTransitionMode transitionMode) const
 	{
 		if(framebuffer == nullptr)

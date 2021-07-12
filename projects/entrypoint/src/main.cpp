@@ -32,13 +32,12 @@ int main()
 	createInfo.fullscreen = false;
 	createInfo.vsync = true;
 
-	//std::unique_ptr<Window> window = std::make_unique<Window>(createInfo);
 	UniquePtr<Window> window = make_unique<Window>(createInfo);
 	
 	GraphicsContextCreateInfo gCreateInfo;
 	gCreateInfo.api = GraphicsAPI::Vulkan;
 
-	std::unique_ptr<GraphicsContext> context = std::make_unique<GraphicsContext>(*window, gCreateInfo);
+	UniquePtr<GraphicsContext> context = make_unique<GraphicsContext>(*window, gCreateInfo);
 	
 	std::ifstream vFile("data/shaders/triangle_vs.hlsl");
 	std::string vSource((std::istreambuf_iterator<char>(vFile)),
@@ -55,7 +54,7 @@ int main()
 	shaderCi.cullMode = CullMode::BACK;
 	shaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
 
-	std::unique_ptr<Shader> shader = std::make_unique<Shader>(*context, shaderCi);
+	UniquePtr<Shader> shader = make_unique<Shader>(*context, shaderCi);
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
@@ -67,8 +66,8 @@ int main()
 		2, 1, 0
 	};
 
-	std::unique_ptr<VertexBuffer> vertexBuffer = std::make_unique<VertexBuffer>(*context, vertices, sizeof(vertices));
-	std::unique_ptr<IndexBuffer> indexBuffer = std::make_unique<IndexBuffer>(*context, indices, sizeof(indices));
+	UniquePtr<VertexBuffer> vertexBuffer = make_unique<VertexBuffer>(*context, vertices, sizeof(vertices));
+	UniquePtr<IndexBuffer> indexBuffer = make_unique<IndexBuffer>(*context, indices, sizeof(indices));
 
 	std::vector<VertexBuffer*> buffers;
 	buffers.push_back(vertexBuffer.get());
