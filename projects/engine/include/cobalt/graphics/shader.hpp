@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string_view>
-#include <memory>
 #include <vector>
 
 #include <cobalt/graphics/graphicsenums.hpp>
@@ -10,6 +8,19 @@
 
 namespace cobalt
 {
+	class ShaderResource
+	{
+		public:
+			ShaderResource();
+			~ShaderResource();
+
+		protected:
+			friend class ShaderResourceHelper;
+
+			struct ShaderResourceImpl;
+			ShaderResourceImpl* _impl;
+	};
+	
 	struct ShaderResourceDesc
 	{
 		ShaderType shaderStages = ShaderType::UNKNOWN;
@@ -17,16 +28,20 @@ namespace cobalt
 		ShaderResourceType type = ShaderResourceType::STATIC;
 		ShaderVariableFlags flags = ShaderVariableFlags::NONE;
 
-		ShaderResourceDesc() noexcept = default;
+		ShaderResource* resource;
+
+		ShaderResourceDesc() = default;
 
 		ShaderResourceDesc(const ShaderType shaderStages,
 		                   const std::string& name,
 		                   const ShaderResourceType type,
-		                   const ShaderVariableFlags flags = ShaderVariableFlags::NONE) noexcept :
+		                   const ShaderVariableFlags flags,
+						   ShaderResource* resource = nullptr) noexcept :
 				shaderStages{ shaderStages },
 				name{ name },
 				type{ type },
-				flags{ flags }
+				flags{ flags },
+				resource{resource}
 		{}
 	};
 	
@@ -52,11 +67,15 @@ namespace cobalt
 		std::vector<ImmutableSampler> immutableSamplers;
 	};
 	
-	class Shader final
+	class Shader
 	{
 		public:
 			Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo);
 			~Shader();
+
+			COBALT_NO_COPY_MOVE(Shader)
+
+			void setData(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data) const;
 
 		private:
 			friend class ShaderHelper;

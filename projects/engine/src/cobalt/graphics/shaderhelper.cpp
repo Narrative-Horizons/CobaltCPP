@@ -9,11 +9,6 @@ namespace cobalt
 		return _shader._impl->pipeline;
 	}
 
-	Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> ShaderHelper::getBindings() const
-	{
-		return _shader._impl->bindings;
-	}
-
 	Diligent::RefCntAutoPtr<Diligent::IShader> ShaderHelper::getVertexShader() const
 	{
 		return _shader._impl->vShader;
@@ -32,5 +27,12 @@ namespace cobalt
 	Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> ShaderHelper::getResourceBinding() const
 	{
 		return _shader._impl->srb;
+	}
+
+	ShaderResourceHelper::ShaderResourceHelper(const ShaderResource& resource) : _resource(resource) { }
+
+	Diligent::RefCntAutoPtr<Diligent::IDeviceObject> ShaderResourceHelper::getResourceObject() const
+	{
+		return _resource._impl->objectData;
 	}
 }

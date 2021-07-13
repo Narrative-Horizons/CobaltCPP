@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #define COBALT_NO_COPY(cls)                                                    \
     cls(const cls&) = delete;                                                  \
     cls& operator=(const cls&) = delete;

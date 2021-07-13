@@ -55,6 +55,7 @@ project("Engine")
             "DiligentFX.lib",
             "SPIRV-Tools-opt.lib",
             "SPIRV-Tools.lib",
+            "Diligent-GraphicsTools.lib",
         })
 
     filter({"system:Windows", "Debug"})

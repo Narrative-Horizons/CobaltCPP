@@ -18,9 +18,9 @@ namespace cobalt
 	class Framebuffer
 	{
 		public:
-			Framebuffer(const FramebufferCreateInfo& createInfo);
+			explicit Framebuffer(const FramebufferCreateInfo& createInfo);
 
-			FramebufferCreateInfo getInfo() const;
+			COBALT_NO_DISCARD FramebufferCreateInfo getInfo() const;
 
 		private:
 			friend class FramebufferHelper;

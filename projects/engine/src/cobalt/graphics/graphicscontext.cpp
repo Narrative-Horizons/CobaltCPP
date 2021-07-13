@@ -101,7 +101,7 @@ namespace cobalt
 		}
 		else
 		{
-			FramebufferHelper framebufferHelper(*framebuffer);
+			const FramebufferHelper framebufferHelper(*framebuffer);
 			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
 			_impl->immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer->getInfo().renderTargets.size()),
@@ -121,7 +121,7 @@ namespace cobalt
 		}
 		else
 		{
-			FramebufferHelper framebufferHelper(*framebuffer);
+			const FramebufferHelper framebufferHelper(*framebuffer);
 			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
 			_impl->immediateContext->ClearRenderTarget(framebufferHelper.getRenderTarget(currentFrame, index), rgba,
@@ -140,7 +140,7 @@ namespace cobalt
 		}
 		else
 		{
-			FramebufferHelper framebufferHelper(*framebuffer);
+			const FramebufferHelper framebufferHelper(*framebuffer);
 			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
 			_impl->immediateContext->ClearDepthStencil(framebufferHelper.getDepthTarget(currentFrame),
@@ -150,9 +150,14 @@ namespace cobalt
 
 	void GraphicsContext::setPipelineState(Shader& shader) const
 	{
-		ShaderHelper shaderHelper(shader);
-		auto x = shaderHelper.getPipeline();
-		_impl->immediateContext->SetPipelineState(x);
+		const ShaderHelper shaderHelper(shader);
+		_impl->immediateContext->SetPipelineState(shaderHelper.getPipeline());
+	}
+
+	void GraphicsContext::commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode) const
+	{
+		const ShaderHelper shaderHelper(shader);
+		_impl->immediateContext->CommitShaderResources(shaderHelper.getResourceBinding(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 	}
 
 	void GraphicsContext::setVertexBuffers(const uint32_t start, const std::vector<VertexBuffer*>& buffers, uint32_t* offsets,
@@ -172,7 +177,7 @@ namespace cobalt
 	void GraphicsContext::setIndexBuffer(IndexBuffer& buffer, const uint32_t byteOffset,
 		ResourceStateTransitionMode transitionMode) const
 	{
-		IndexBufferHelper bufferHelper(buffer);
+		const IndexBufferHelper bufferHelper(buffer);
 		_impl->immediateContext->SetIndexBuffer(bufferHelper.getBuffer(), byteOffset, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 	}
 

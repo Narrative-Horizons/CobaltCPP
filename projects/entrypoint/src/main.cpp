@@ -9,6 +9,8 @@
 #include <cobalt/graphics/shader.hpp>
 #include <cobalt/graphics/vertexbuffer.hpp>
 #include <cobalt/graphics/indexbuffer.hpp>
+#include <cobalt/graphics/uniformbuffer.hpp>
+#include <cobalt/graphics/shaderstoragebuffer.hpp>
 
 using namespace cobalt;
 
@@ -22,6 +24,19 @@ int WINAPI WinMain(HINSTANCE instance,
 {
 	main(instance, NULL, NULL, nShowCmd);
 	*/
+
+struct CBuffer
+{
+	float buffer[16];
+
+	CBuffer()
+	{
+		for (int i = 0; i < 16; i++)
+		{
+			buffer[i] = 0.0f;
+		}
+	}
+};
 
 int main()
 {
@@ -37,7 +52,7 @@ int main()
 	GraphicsContextCreateInfo gCreateInfo;
 	gCreateInfo.api = GraphicsAPI::Vulkan;
 
-	UniquePtr<GraphicsContext> context = make_unique<GraphicsContext>(*window, gCreateInfo);
+	UniquePtr<GraphicsContext> context = MakeUnique<GraphicsContext>(*window, gCreateInfo);
 	
 	std::ifstream vFile("data/shaders/triangle_vs.hlsl");
 	std::string vSource((std::istreambuf_iterator<char>(vFile)),
@@ -46,6 +61,8 @@ int main()
 	std::ifstream pFile("data/shaders/triangle_ps.hlsl");
 	std::string pSource((std::istreambuf_iterator<char>(pFile)),
 		std::istreambuf_iterator<char>());
+
+	UniquePtr<UniformBuffer> uniformBuffer = MakeUnique<UniformBuffer>(*context, ShaderResourceType::STATIC, sizeof(float) * 16, "myBuffer");
 	
 	ShaderCreateInfo shaderCi;
 	shaderCi.name = "PBR";
@@ -53,8 +70,25 @@ int main()
 	shaderCi.pixelSource = pSource;
 	shaderCi.cullMode = CullMode::BACK;
 	shaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
+	
+	ShaderResourceDesc uD;
+	uD.name = "myBuffer";
+	uD.flags = ShaderVariableFlags::NONE;
+	uD.shaderStages = ShaderType::VERTEX;
+	uD.type = ShaderResourceType::STATIC;
+	uD.resource = uniformBuffer.get();
+	
+	shaderCi.shaderResources.push_back(uD);
 
-	UniquePtr<Shader> shader = make_unique<Shader>(*context, shaderCi);
+	ShaderResourceDesc sD;
+	sD.name = "myDynamicBuffer";
+	sD.flags = ShaderVariableFlags::NONE;
+	sD.shaderStages = ShaderType::VERTEX;
+	sD.type = ShaderResourceType::DYNAMIC;
+
+	shaderCi.shaderResources.push_back(sD);
+	
+	UniquePtr<Shader> shader = MakeUnique<Shader>(*context, shaderCi);
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
@@ -66,12 +100,21 @@ int main()
 		2, 1, 0
 	};
 
-	UniquePtr<VertexBuffer> vertexBuffer = make_unique<VertexBuffer>(*context, vertices, sizeof(vertices));
-	UniquePtr<IndexBuffer> indexBuffer = make_unique<IndexBuffer>(*context, indices, sizeof(indices));
+	UniquePtr<VertexBuffer> vertexBuffer = MakeUnique<VertexBuffer>(*context, vertices, sizeof(vertices));
+	UniquePtr<IndexBuffer> indexBuffer = MakeUnique<IndexBuffer>(*context, indices, sizeof(indices));
 
 	std::vector<VertexBuffer*> buffers;
 	buffers.push_back(vertexBuffer.get());
 	uint32_t offset = 0;
+
+	CBuffer cBuffer;
+
+	cBuffer.buffer[0] = 1.0f;
+	cBuffer.buffer[5] = 1.0f;
+	cBuffer.buffer[10] = 1.0f;
+	cBuffer.buffer[15] = 1.0f;
+
+	UniquePtr<ShaderStorageBuffer> storageBuffer = MakeUnique<ShaderStorageBuffer>(*context, ShaderResourceType::DYNAMIC, sizeof(float) * 16, "myDynamicBuffer");
 	
 	while (!window->shouldClose())
 	{
@@ -90,6 +133,12 @@ int main()
 
 		context->setVertexBuffers(0, buffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
 		context->setIndexBuffer(*indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
+
+		uniformBuffer->setData(&cBuffer, ResourceStateTransitionMode::TRANSITION);
+
+		storageBuffer->setData(&cBuffer, ResourceStateTransitionMode::TRANSITION);
+
+		shader->setData(ShaderType::VERTEX, ShaderResourceType::DYNAMIC, "myDynamicBuffer", *storageBuffer);
 
 		context->setPipelineState(*shader);
 		context->commitShaderResources(*shader, ResourceStateTransitionMode::TRANSITION);
