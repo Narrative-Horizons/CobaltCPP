@@ -12,6 +12,12 @@ namespace cobalt
 		// TODO: Create textureviews
 	}
 
+	Framebuffer::~Framebuffer()
+	{
+		delete _impl;
+		_impl = nullptr;
+	}
+
 	FramebufferCreateInfo Framebuffer::getInfo() const
 	{
 		return _createInfo;

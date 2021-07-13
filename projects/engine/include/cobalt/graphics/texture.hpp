@@ -21,6 +21,7 @@ namespace cobalt
 	{
 		public:
 			Texture(const GraphicsContext& context, const Image& image, const TextureCreateInfo& createInfo);
+			~Texture();
 
 		private:
 			friend class TextureHelper;

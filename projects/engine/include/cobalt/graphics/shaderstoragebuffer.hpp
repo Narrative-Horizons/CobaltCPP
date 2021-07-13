@@ -10,6 +10,7 @@ namespace cobalt
 		public:
 			// TODO: Add bind type
 			ShaderStorageBuffer(const GraphicsContext& context, ShaderResourceType type, size_t size, const std::string& name);
+			~ShaderStorageBuffer();
 
 			void setData(const void* data, ResourceStateTransitionMode transitionMode) const;
 

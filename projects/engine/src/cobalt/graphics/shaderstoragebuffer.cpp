@@ -39,6 +39,15 @@ namespace cobalt
 		_impl->objectData = _uimpl->buffer->GetDefaultView(Diligent::BUFFER_VIEW_SHADER_RESOURCE);
 	}
 
+	ShaderStorageBuffer::~ShaderStorageBuffer()
+	{
+		delete _uimpl;
+		_uimpl = nullptr;
+
+		delete _impl;
+		_impl = nullptr;
+	}
+
 	void ShaderStorageBuffer::setData(const void* data, ResourceStateTransitionMode transitionMode) const
 	{
 		const GraphicsContextHelper contextHelper(_uimpl->context);

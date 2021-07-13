@@ -37,6 +37,15 @@ namespace cobalt
 		_impl->objectData = _uimpl->buffer;
 	}
 
+	UniformBuffer::~UniformBuffer()
+	{
+		delete _uimpl;
+		_uimpl = nullptr;
+
+		delete _impl;
+		_impl = nullptr;
+	}
+
 	void UniformBuffer::setData(const void* data, ResourceStateTransitionMode transitionMode) const
 	{
 		const GraphicsContextHelper contextHelper(_uimpl->context);

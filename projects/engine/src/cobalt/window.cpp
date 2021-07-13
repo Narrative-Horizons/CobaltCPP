@@ -53,6 +53,12 @@ namespace cobalt
 		});
 	}
 
+	Window::~Window()
+	{
+		glfwDestroyWindow(static_cast<GLFWwindow*>(_glfwWindow));
+		glfwTerminate();
+	}
+
 	uint32_t Window::width() const
 	{
 		return _createInfo.width;

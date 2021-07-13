@@ -21,8 +21,8 @@ namespace cobalt
 		bufferData.pData = data;
 		bufferData.DataSize = static_cast<uint32_t>(size);
 
-		GraphicsContextHelper* contextHelper = new GraphicsContextHelper(context);
-		contextHelper->getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_impl->buffer);
+		const GraphicsContextHelper contextHelper(context);
+		contextHelper.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_impl->buffer);
 	}
 
 	VertexBuffer::~VertexBuffer()

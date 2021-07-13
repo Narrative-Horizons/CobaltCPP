@@ -22,7 +22,7 @@ namespace cobalt
 		public:
 			Window() = default;
 			explicit Window(const WindowCreateInfo& createInfo);
-			~Window() = default;
+			~Window();
 
 			COBALT_NO_COPY_MOVE(Window)
 

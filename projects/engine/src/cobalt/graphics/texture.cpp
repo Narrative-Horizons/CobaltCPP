@@ -30,4 +30,13 @@ namespace cobalt
 
 		_impl->objectData = _timpl->texture->GetDefaultView(Diligent::TEXTURE_VIEW_SHADER_RESOURCE);
 	}
+
+	Texture::~Texture()
+	{
+		delete _timpl;
+		_timpl = nullptr;
+
+		delete _impl;
+		_impl = nullptr;
+	}
 }

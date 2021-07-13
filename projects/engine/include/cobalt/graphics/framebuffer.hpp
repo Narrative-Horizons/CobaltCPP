@@ -19,6 +19,7 @@ namespace cobalt
 	{
 		public:
 			explicit Framebuffer(const FramebufferCreateInfo& createInfo);
+			~Framebuffer();
 
 			COBALT_NO_DISCARD FramebufferCreateInfo getInfo() const;
 
