@@ -1,6 +1,10 @@
+Texture2D tex;
+SamplerState tex_sampler;
+
 struct PSInput
 {
     float4 pos : SV_POSITION;
+    float2 UV : TEX_COORD;
 };
 
 struct PSOutput
@@ -10,5 +14,5 @@ struct PSOutput
 
 void main(in PSInput PSIn, out PSOutput PSOut)
 {
-    PSOut.color = float4(1, 0, 1, 1);
+    PSOut.color = tex.Sample(tex_sampler, PSIn.UV);
 }

@@ -28,7 +28,7 @@ namespace cobalt
 		ShaderResourceType type = ShaderResourceType::STATIC;
 		ShaderVariableFlags flags = ShaderVariableFlags::NONE;
 
-		ShaderResource* resource;
+		ShaderResource* resource = nullptr;
 
 		ShaderResourceDesc() = default;
 

@@ -11,6 +11,8 @@
 #include <cobalt/graphics/indexbuffer.hpp>
 #include <cobalt/graphics/uniformbuffer.hpp>
 #include <cobalt/graphics/shaderstoragebuffer.hpp>
+#include <cobalt/graphics/image.hpp>
+#include <cobalt/graphics/texture.hpp>
 
 using namespace cobalt;
 
@@ -31,9 +33,9 @@ struct CBuffer
 
 	CBuffer()
 	{
-		for (int i = 0; i < 16; i++)
+		for (float& i : buffer)
 		{
-			buffer[i] = 0.0f;
+			i = 0.0f;
 		}
 	}
 };
@@ -70,6 +72,15 @@ int main()
 	shaderCi.pixelSource = pSource;
 	shaderCi.cullMode = CullMode::BACK;
 	shaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
+
+	ImmutableSampler imSampler;
+	imSampler.name = "tex";
+	imSampler.shaderStages = ShaderType::PIXEL;
+
+	Sampler sampler;
+	imSampler.sampler = sampler;
+	
+	shaderCi.immutableSamplers.push_back(imSampler);
 	
 	ShaderResourceDesc uD;
 	uD.name = "myBuffer";
@@ -77,23 +88,22 @@ int main()
 	uD.shaderStages = ShaderType::VERTEX;
 	uD.type = ShaderResourceType::STATIC;
 	uD.resource = uniformBuffer.get();
-	
 	shaderCi.shaderResources.push_back(uD);
 
-	ShaderResourceDesc sD;
-	sD.name = "myDynamicBuffer";
-	sD.flags = ShaderVariableFlags::NONE;
-	sD.shaderStages = ShaderType::VERTEX;
-	sD.type = ShaderResourceType::DYNAMIC;
 
-	shaderCi.shaderResources.push_back(sD);
+	ShaderResourceDesc tD;
+	tD.name = "tex";
+	tD.flags = ShaderVariableFlags::NONE;
+	tD.shaderStages = ShaderType::PIXEL;
+	tD.type = ShaderResourceType::DYNAMIC;
+	shaderCi.shaderResources.push_back(tD);
 	
 	UniquePtr<Shader> shader = MakeUnique<Shader>(*context, shaderCi);
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		 0.0f,  0.5f, 0.0f, 0.5f, 1.0f
 	};
 
 	uint32_t indices[] = {
@@ -114,7 +124,16 @@ int main()
 	cBuffer.buffer[10] = 1.0f;
 	cBuffer.buffer[15] = 1.0f;
 
-	UniquePtr<ShaderStorageBuffer> storageBuffer = MakeUnique<ShaderStorageBuffer>(*context, ShaderResourceType::DYNAMIC, sizeof(float) * 16, "myDynamicBuffer");
+	UniquePtr<Image> image = MakeUnique<Image>("data/textures/shawn.png");
+	
+	TextureCreateInfo texCreateInfo;
+	texCreateInfo.name = "Test";
+	texCreateInfo.usage = Usage::DYNAMIC;
+	texCreateInfo.format = TextureFormat::RGBA8_UNORM_SRGB;
+	texCreateInfo.bindFlags = BindFlags::SHADER_RESOURCE;
+	texCreateInfo.accessFlags = CPUAccessFlags::WRITE;
+	
+	UniquePtr<Texture> texture = MakeUnique<Texture>(*context, *image, texCreateInfo);
 	
 	while (!window->shouldClose())
 	{
@@ -136,10 +155,8 @@ int main()
 
 		uniformBuffer->setData(&cBuffer, ResourceStateTransitionMode::TRANSITION);
 
-		storageBuffer->setData(&cBuffer, ResourceStateTransitionMode::TRANSITION);
-
-		shader->setData(ShaderType::VERTEX, ShaderResourceType::DYNAMIC, "myDynamicBuffer", *storageBuffer);
-
+		shader->setData(ShaderType::PIXEL, ShaderResourceType::DYNAMIC, "tex", *texture);
+		
 		context->setPipelineState(*shader);
 		context->commitShaderResources(*shader, ResourceStateTransitionMode::TRANSITION);
 

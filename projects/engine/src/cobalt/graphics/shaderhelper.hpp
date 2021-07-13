@@ -18,6 +18,8 @@ namespace cobalt
 		Diligent::RefCntAutoPtr<Diligent::IShader> pShader;
 		Diligent::RefCntAutoPtr<Diligent::IShader> cShader;
 		Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> srb;
+		std::vector<Diligent::ShaderResourceVariableDesc> vars;
+		std::vector<Diligent::ImmutableSamplerDesc> samplers;
 	};
 
 	struct ShaderResource::ShaderResourceImpl

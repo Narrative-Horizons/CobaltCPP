@@ -1,6 +1,7 @@
 struct PSInput
 {
     float4 pos : SV_POSITION;
+    float2 UV : TEX_COORD;
 };
 
 cbuffer myBuffer
@@ -8,16 +9,8 @@ cbuffer myBuffer
     float4x4 object;
 }
 
-struct ObjectData
+void main(in float3 position : ATTRIB0, in float2 iUV : ATTRIB1, out PSInput PSIn)
 {
-    float4x4 model;
-};
-StructuredBuffer<ObjectData> myDynamicBuffer;
-
-
-void main(in float3 position : ATTRIB0, out PSInput PSIn)
-{
-    ObjectData d = myDynamicBuffer[0];
-
-    PSIn.pos = mul(d.model, float4(position, 1.0));
+    PSIn.pos = mul(object, float4(position, 1.0));
+    PSIn.UV = iUV;
 }

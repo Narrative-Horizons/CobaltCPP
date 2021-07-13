@@ -23,6 +23,9 @@ project("Entrypoint")
         "Engine",
     })
 
+    filter("Debug")
+        symbols("On")
+
     postbuildcommands({
 
     })

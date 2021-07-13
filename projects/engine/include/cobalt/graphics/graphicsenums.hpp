@@ -338,4 +338,48 @@ namespace cobalt
 		VERIFY_ALL = VERIFY_STATES | VERIFY_DRAW_ATTRIBS | VERIFY_RENDER_TARGETS,
 		DYNAMIC_RESOURCE_BUFFERS_INTACT = 0x08
 	};
+
+	enum class ImageFileFormat : uint8_t
+	{
+		UNKNOWN = 0,
+		JPEG,
+		PNG,
+		TIFF,
+		DDS,
+		KTX
+	};
+
+	enum class Usage : uint8_t
+	{
+		IMMUTABLE = 0,
+		DEFAULT,
+		DYNAMIC,
+		STAGING,
+		UNIFIED,
+		NUM_USAGES
+	};
+
+	enum class BindFlags : uint32_t
+	{
+		NONE = 0x0,
+		VERTEX_BUFFER = 0x1,
+		INDEX_BUFFER = 0x2,
+		UNIFORM_BUFFER = 0x4,
+		SHADER_RESOURCE = 0x8,
+		STREAM_OUTPUT = 0x10,
+		RENDER_TARGET = 0x20,
+		DEPTH_STENCIL = 0x40,
+		UNORDERED_ACCESS = 0x80,
+		INDIRECT_DRAW_ARGS = 0x100,
+		INPUT_ATTACHMENT = 0x200,
+		RAY_TRACING = 0x400,
+		FLAGS_LAST = 0x400
+	};
+
+	enum class CPUAccessFlags : uint8_t
+	{
+		NONE = 0x00,
+		READ = 0x01,
+		WRITE = 0x02
+	};
 }

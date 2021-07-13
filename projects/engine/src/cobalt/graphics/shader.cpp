@@ -35,10 +35,10 @@ namespace cobalt
 		std::string computeShaderName = (createInfo.name + " CS");
 		std::string entryPoint = "main";
 
-		constexpr uint32_t vertexLayoutCount = 1;
+		constexpr uint32_t vertexLayoutCount = 2;
 		LayoutElement vertexLayouts[vertexLayoutCount] = {
 			LayoutElement{0, 0, 3, VT_FLOAT32, False}, // Position
-			//LayoutElement{1, 0, 2, VT_FLOAT32, False}, // UV0
+			LayoutElement{1, 0, 2, VT_FLOAT32, False}, // UV0
 			//LayoutElement{2, 0, 3, VT_FLOAT32, False}, // Normal
 			//LayoutElement{3, 0, 3, VT_FLOAT32, False}, // Tangent
 			//LayoutElement{4, 0, 3, VT_FLOAT32, False}, // Bitangent
@@ -134,25 +134,31 @@ namespace cobalt
 		if(!createInfo.shaderResources.empty())
 		{
 			PipelineStateDesc& psoDesc = graphicsPsoInfo.PSODesc;
-			std::vector<ShaderResourceVariableDesc> vars;
+
+			bool hasNonStaticResources = false;
 			for(const auto& resource : createInfo.shaderResources)
 			{
 				if (resource.type == ShaderResourceType::STATIC)
 					continue;
+
+				hasNonStaticResources = true;
 				
 				ShaderResourceVariableDesc var{ static_cast<SHADER_TYPE>(resource.shaderStages), resource.name.c_str(),
 					static_cast<SHADER_RESOURCE_VARIABLE_TYPE>(resource.type), static_cast<SHADER_VARIABLE_FLAGS>(resource.flags) };
 
-				vars.push_back(var);
+				_impl->vars.push_back(var);
 			}
 
-			psoDesc.ResourceLayout.Variables = &vars[0];
-			psoDesc.ResourceLayout.NumVariables = static_cast<uint32_t>(vars.size());
+			if (hasNonStaticResources)
+			{
+				psoDesc.ResourceLayout.Variables = &_impl->vars[0];
+				psoDesc.ResourceLayout.NumVariables = static_cast<uint32_t>(_impl->vars.size());
+			}
 		}
 
 		if(!createInfo.immutableSamplers.empty())
 		{
-			std::vector<ImmutableSamplerDesc> samplers;
+			
 			for(const auto& [shaderStages, name, sampler] : createInfo.immutableSamplers)
 			{
 				SamplerDesc samplerDesc{ static_cast<FILTER_TYPE>(sampler.minFilter), static_cast<FILTER_TYPE>(sampler.magfilter), static_cast<FILTER_TYPE>(sampler.mipFilter),
@@ -160,12 +166,12 @@ namespace cobalt
 				sampler.mipLODBias, sampler.maxAnisotropy, static_cast<COMPARISON_FUNCTION>(sampler.comparisonFunc), sampler.minLOD, sampler.maxLOD };
 				ImmutableSamplerDesc desc{ static_cast<SHADER_TYPE>(shaderStages), name.c_str(), samplerDesc };
 
-				samplers.push_back(desc);
+				_impl->samplers.push_back(desc);
 			}
 
 			PipelineStateDesc& psoDesc = graphicsPsoInfo.PSODesc;
-			psoDesc.ResourceLayout.ImmutableSamplers = &samplers[0];
-			psoDesc.ResourceLayout.NumImmutableSamplers = static_cast<uint32_t>(samplers.size());
+			psoDesc.ResourceLayout.ImmutableSamplers = &_impl->samplers[0];
+			psoDesc.ResourceLayout.NumImmutableSamplers = static_cast<uint32_t>(_impl->samplers.size());
 		}
 
 		if(!createInfo.computeSource.empty())
@@ -214,7 +220,8 @@ namespace cobalt
 			case ShaderResourceType::MUTABLE:
 			case ShaderResourceType::DYNAMIC:
 			{
-				_impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data())->Set(resourceHelper.getResourceObject());
+				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
+				x->Set(resourceHelper.getResourceObject());
 				break;
 			}
 		}

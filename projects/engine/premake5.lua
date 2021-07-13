@@ -37,6 +37,8 @@ project("Engine")
             "DEBUG"
         })
 
+        symbols("On")
+
     filter("system:Windows")
 
         defines({
@@ -52,6 +54,10 @@ project("Engine")
 
         links({
             "DiligentCore.lib",
+            "DiligentTools.lib",
+            "LibJpeg.lib",
+            "LibPng.lib",
+            "LibTiff.lib",
             "DiligentFX.lib",
             "SPIRV-Tools-opt.lib",
             "SPIRV-Tools.lib",
@@ -59,7 +65,6 @@ project("Engine")
         })
 
     filter({"system:Windows", "Debug"})
-
         links({
             "GenericCodeGend.lib",
             "GraphicsEngineVk_64d.lib",
