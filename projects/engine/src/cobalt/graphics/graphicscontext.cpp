@@ -5,6 +5,7 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/DeviceContext.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
+#include <DiligentTools/Imgui/interface/ImGuiDiligentRenderer.hpp>
 
 #include "graphicscontexthelper.hpp"
 #include "framebufferhelper.hpp"
@@ -57,6 +58,12 @@ namespace cobalt
 				break;
 			}
 		}
+
+		_impl->guiContext = ImGui::CreateContext();
+		ImGui::StyleColorsDark();
+
+		_impl->guiRenderer = new ImGuiDiligentRenderer(_impl->device, TEX_FORMAT_BGRA8_UNORM_SRGB, TEX_FORMAT_D32_FLOAT, 1024, 1024);
+		_impl->guiRenderer->CreateFontsTexture();
 	}
 
 	GraphicsContext::~GraphicsContext()
@@ -66,6 +73,12 @@ namespace cobalt
 
 		_impl->immediateContext->Flush();
 
+		ImGui::DestroyContext(_impl->guiContext);
+		_impl->guiContext = nullptr;
+		
+		_impl->guiRenderer->InvalidateDeviceObjects();
+		delete _impl->guiRenderer;
+		
 		delete _impl;
 	}
 
@@ -102,11 +115,19 @@ namespace cobalt
 		else
 		{
 			const FramebufferHelper framebufferHelper(*framebuffer);
-			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
+
+			std::vector<Diligent::ITextureView*> views;
+			views.reserve(framebuffer->getInfo().renderTargets.size());
+			for(int index = 0; index < static_cast<int>(framebuffer->getInfo().renderTargets.size()); index++)
+			{
+				views.push_back(framebufferHelper.getRenderTarget(index, TextureTypeView::RENDER_TARGET));
+			}
+
+			auto x = framebufferHelper.getDepthTarget(TextureTypeView::DEPTH_STENCIL);
 
 			_impl->immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer->getInfo().renderTargets.size()),
-				framebufferHelper.getRenderTargets(currentFrame),
-				framebufferHelper.getDepthTarget(currentFrame),
+				views.data(),
+				x,
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
@@ -122,9 +143,8 @@ namespace cobalt
 		else
 		{
 			const FramebufferHelper framebufferHelper(*framebuffer);
-			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
-			_impl->immediateContext->ClearRenderTarget(framebufferHelper.getRenderTarget(currentFrame, index), rgba,
+			_impl->immediateContext->ClearRenderTarget(framebufferHelper.getRenderTarget(index, TextureTypeView::RENDER_TARGET), rgba,
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
@@ -141,9 +161,8 @@ namespace cobalt
 		else
 		{
 			const FramebufferHelper framebufferHelper(*framebuffer);
-			const uint32_t currentFrame = 0; // TODO: Make this the actual current frame
 
-			_impl->immediateContext->ClearDepthStencil(framebufferHelper.getDepthTarget(currentFrame),
+			_impl->immediateContext->ClearDepthStencil(framebufferHelper.getDepthTarget(TextureTypeView::DEPTH_STENCIL),
 				static_cast<Diligent::CLEAR_DEPTH_STENCIL_FLAGS>(flags), depth, stencil, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
@@ -170,7 +189,7 @@ namespace cobalt
 			diligentBuffers.push_back(bufferHelper.getBuffer());
 		}
 		
-		_impl->immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), &diligentBuffers[0], offsets,
+		_impl->immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), diligentBuffers.data(), offsets,
 			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode), static_cast<Diligent::SET_VERTEX_BUFFERS_FLAGS>(flags));
 	}
 
@@ -197,6 +216,21 @@ namespace cobalt
 
 	void GraphicsContext::present() const
 	{
+		_impl->guiRenderer->NewFrame(1280, 720, Diligent::SURFACE_TRANSFORM_IDENTITY);
+
+		ImGuiIO& io = ImGui::GetIO();
+		io.DisplaySize = ImVec2(1280, 720);
+
+		ImGui::NewFrame();
+		ImGui::Begin("Cobalt");
+
+		ImGui::Text("Cobalt Text UI Test");
+		ImGui::End();
+		ImGui::Render();
+		
+		_impl->guiRenderer->EndFrame();
+		_impl->guiRenderer->RenderDrawData(_impl->immediateContext, ImGui::GetDrawData());
+		
 		_impl->swapChain->Present(static_cast<uint32_t>(_impl->window->vSyncEnabled()));
 	}
 

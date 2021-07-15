@@ -32,7 +32,7 @@
 #include "../../../DiligentCore/Common/interface/BasicMath.hpp"
 #include "../../../DiligentCore/Common/interface/RefCntAutoPtr.hpp"
 #include "../../../DiligentCore/Graphics/GraphicsEngine/interface/GraphicsTypes.h"
-#include "imgui.h"
+#include "DiligentTools/ThirdParty/imgui/imgui.h"
 
 struct ImDrawData;
 

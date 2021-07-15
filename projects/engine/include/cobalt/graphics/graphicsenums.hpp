@@ -382,4 +382,14 @@ namespace cobalt
 		READ = 0x01,
 		WRITE = 0x02
 	};
+
+	enum class TextureTypeView : uint8_t
+	{
+		UNDEFINED = 0,
+		SHADER_RESOURCE,
+		RENDER_TARGET,
+		DEPTH_STENCIL,
+		UNORDERED_ACCESS,
+		NUM_VIEWS
+	};
 }

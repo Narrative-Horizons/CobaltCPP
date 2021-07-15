@@ -1,21 +1,21 @@
-#include "framebufferhelper.hpp"
+#include <cobalt/graphics/framebufferhelper.hpp>
 
 namespace cobalt
 {
 	FramebufferHelper::FramebufferHelper(const Framebuffer& framebuffer) : _framebuffer(framebuffer) { }
 
-	Diligent::ITextureView** FramebufferHelper::getRenderTargets(const uint32_t frame) const
+	Diligent::ITexture** FramebufferHelper::getRenderTargets() const
 	{
-		return &_framebuffer._impl->renderTargets[frame][0];
+		return &_framebuffer._impl->renderTargets[0];
 	}
 
-	Diligent::ITextureView* FramebufferHelper::getRenderTarget(const uint32_t frame, const uint32_t index) const
+	Diligent::ITextureView* FramebufferHelper::getRenderTarget(const uint32_t index, TextureTypeView viewType) const
 	{
-		return _framebuffer._impl->renderTargets[frame][index];
+		return _framebuffer._impl->renderTargets[index]->GetDefaultView(static_cast<Diligent::TEXTURE_VIEW_TYPE>(viewType));
 	}
 
-	Diligent::ITextureView* FramebufferHelper::getDepthTarget(const uint32_t frame) const
+	Diligent::ITextureView* FramebufferHelper::getDepthTarget(TextureTypeView viewType) const
 	{
-		return _framebuffer._impl->depthTarget[frame];
+		return _framebuffer._impl->depthTarget->GetDefaultView(static_cast<Diligent::TEXTURE_VIEW_TYPE>(viewType));
 	}
 }

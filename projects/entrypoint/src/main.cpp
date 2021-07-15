@@ -72,6 +72,8 @@ int main()
 	shaderCi.pixelSource = pSource;
 	shaderCi.cullMode = CullMode::BACK;
 	shaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
+	shaderCi.renderTargetFormats.push_back(TextureFormat::BGRA8_UNORM_SRGB);
+	shaderCi.depthTargetFormat = TextureFormat::D32_FLOAT;
 
 	ImmutableSampler imSampler;
 	imSampler.name = "tex";
@@ -134,6 +136,51 @@ int main()
 	texCreateInfo.accessFlags = CPUAccessFlags::WRITE;
 	
 	UniquePtr<Texture> texture = MakeUnique<Texture>(*context, *image, texCreateInfo);
+
+	FramebufferCreateInfo bufferCreateInfo;
+	bufferCreateInfo.width = 1280;
+	bufferCreateInfo.height = 720;
+	bufferCreateInfo.renderTargets.push_back(TextureFormat::BGRA8_UNORM_SRGB);
+	bufferCreateInfo.depthTarget = TextureFormat::D32_FLOAT;
+	UniquePtr<Framebuffer> renderBuffer = MakeUnique<Framebuffer>(*context, bufferCreateInfo);
+
+	float screenVertices[] = {
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 0.0f, 0.0f, 1.0f
+	};
+
+	uint32_t screenIndices[] = {
+		2, 1, 0, 0, 3, 2
+	};
+
+	UniquePtr<VertexBuffer> screenVertexBuffer = MakeUnique<VertexBuffer>(*context, screenVertices, sizeof(screenVertices));
+	UniquePtr<IndexBuffer> screenIndexBuffer = MakeUnique<IndexBuffer>(*context, screenIndices, sizeof(screenIndices));
+
+	std::ifstream rVFile("data/shaders/resolve_vs.hlsl");
+	std::string rVSource((std::istreambuf_iterator<char>(rVFile)),
+		std::istreambuf_iterator<char>());
+
+	std::ifstream rPFile("data/shaders/resolve_ps.hlsl");
+	std::string rPSource((std::istreambuf_iterator<char>(rPFile)),
+		std::istreambuf_iterator<char>());
+	
+	ShaderCreateInfo resolveShaderCi;
+	resolveShaderCi.name = "Resolve Pass";
+	resolveShaderCi.vertexSource = rVSource;
+	resolveShaderCi.pixelSource = rPSource;
+	resolveShaderCi.cullMode = CullMode::BACK;
+	resolveShaderCi.primitiveTopology = PrimitiveTopology::TOPOLOGY_TRIANGLE_LIST;
+
+	resolveShaderCi.immutableSamplers.push_back(imSampler);
+
+	resolveShaderCi.shaderResources.push_back(tD);
+	
+	UniquePtr<Shader> screenResolveShader = MakeUnique<Shader>(*context, resolveShaderCi);
+
+	std::vector<VertexBuffer*> screenBuffers;
+	screenBuffers.push_back(screenVertexBuffer.get());
 	
 	while (!window->shouldClose())
 	{
@@ -144,11 +191,11 @@ int main()
 			window->close();
 		}
 
-		context->setRenderTarget(nullptr, ResourceStateTransitionMode::TRANSITION);
+		context->setRenderTarget(renderBuffer, ResourceStateTransitionMode::TRANSITION);
 		
 		const float clearColor[] = { 0.350f, 0.350f, 0.350f, 1.0f };
-		context->clearRenderTarget(nullptr, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
-		context->clearDepthStencil(nullptr, ClearDepthStencilFlags::DEPTH, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
+		context->clearRenderTarget(renderBuffer, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
+		context->clearDepthStencil(renderBuffer, ClearDepthStencilFlags::DEPTH, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
 
 		context->setVertexBuffers(0, buffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
 		context->setIndexBuffer(*indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
@@ -167,6 +214,26 @@ int main()
 		attr.flags = DrawFlags::VERIFY_ALL;
 
 		context->drawIndexed(attr);
+
+		context->setRenderTarget(nullptr, ResourceStateTransitionMode::TRANSITION);
+
+		context->clearRenderTarget(nullptr, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
+		context->clearDepthStencil(nullptr, ClearDepthStencilFlags::DEPTH, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
+
+		context->setVertexBuffers(0, screenBuffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
+		context->setIndexBuffer(*screenIndexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
+
+		screenResolveShader->setData(ShaderType::PIXEL, ShaderResourceType::DYNAMIC, "tex", *renderBuffer, 0);
+
+		context->setPipelineState(*screenResolveShader);
+		context->commitShaderResources(*screenResolveShader, ResourceStateTransitionMode::TRANSITION);
+
+		DrawIndexedAttributes screenAttr;
+		screenAttr.indexType = ValueType::UINT32;
+		screenAttr.numIndices = 6;
+		screenAttr.flags = DrawFlags::VERIFY_ALL;
+
+		context->drawIndexed(screenAttr);
 
 		window->poll();
 		context->present();

@@ -4,6 +4,8 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/DeviceContext.h>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
 #include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
+#include <DiligentTools/Imgui/interface/ImGuiDiligentRenderer.hpp>
+#include <DiligentTools/ThirdParty/imgui/imgui.h>
 
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/macros.hpp>
@@ -16,6 +18,8 @@ namespace cobalt
 		Diligent::RefCntAutoPtr<Diligent::IDeviceContext>	immediateContext;
 		Diligent::RefCntAutoPtr<Diligent::ISwapChain>		swapChain;
 		Diligent::RENDER_DEVICE_TYPE						deviceType = Diligent::RENDER_DEVICE_TYPE_D3D11;
+		Diligent::ImGuiDiligentRenderer*					guiRenderer;
+		ImGuiContext* guiContext;
 
 		const Window* window;
 	};

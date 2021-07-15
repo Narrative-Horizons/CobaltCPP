@@ -5,6 +5,7 @@
 
 #include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/TextureView.h>
+#include <DiligentCore/Graphics/GraphicsEngine/interface/Texture.h>
 
 #include <cobalt/macros.hpp>
 
@@ -12,8 +13,8 @@ namespace cobalt
 {
 	struct Framebuffer::FramebufferImpl
 	{
-		std::vector<std::vector<Diligent::RefCntAutoPtr<Diligent::ITextureView>>> renderTargets;
-		std::vector < Diligent::RefCntAutoPtr<Diligent::ITextureView>> depthTarget;
+		std::vector<Diligent::RefCntAutoPtr<Diligent::ITexture>> renderTargets;
+		Diligent::RefCntAutoPtr<Diligent::ITexture> depthTarget;
 	};
 
 	class FramebufferHelper
@@ -21,9 +22,9 @@ namespace cobalt
 		public:
 			explicit FramebufferHelper(const Framebuffer& framebuffer);
 
-			COBALT_NO_DISCARD Diligent::ITextureView** getRenderTargets(uint32_t frame) const;
-			COBALT_NO_DISCARD Diligent::ITextureView* getRenderTarget(uint32_t frame, uint32_t index) const;
-			COBALT_NO_DISCARD Diligent::ITextureView* getDepthTarget(uint32_t frame) const;
+			COBALT_NO_DISCARD Diligent::ITexture** getRenderTargets() const;
+			COBALT_NO_DISCARD Diligent::ITextureView* getRenderTarget(uint32_t index, TextureTypeView viewType) const;
+			COBALT_NO_DISCARD Diligent::ITextureView* getDepthTarget(TextureTypeView viewType) const;
 
 		private:
 			const Framebuffer& _framebuffer;

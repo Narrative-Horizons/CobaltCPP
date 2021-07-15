@@ -4,6 +4,7 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
 
 #include <cobalt/graphics/graphicscontexthelper.hpp>
+#include <cobalt/graphics/framebufferhelper.hpp>
 
 #include "shaderhelper.hpp"
 
@@ -222,6 +223,22 @@ namespace cobalt
 			{
 				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
 				x->Set(resourceHelper.getResourceObject());
+				break;
+			}
+		}
+	}
+
+	void Shader::setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, const Framebuffer& framebuffer, const uint32_t index) const
+	{
+		const FramebufferHelper resourceHelper(framebuffer);
+
+		switch (resourceType)
+		{
+			case ShaderResourceType::MUTABLE:
+			case ShaderResourceType::DYNAMIC:
+			{
+				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
+				x->Set(resourceHelper.getRenderTarget(index, TextureTypeView::SHADER_RESOURCE));
 				break;
 			}
 		}
