@@ -14,6 +14,8 @@
 #include <cobalt/graphics/image.hpp>
 #include <cobalt/graphics/texture.hpp>
 
+#include <imgui.h>
+
 using namespace cobalt;
 
 /*
@@ -104,12 +106,13 @@ int main()
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-		 0.0f,  0.5f, 0.0f, 0.5f, 1.0f
+		0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 1.0f
 	};
 
 	uint32_t indices[] = {
-		2, 1, 0
+		2, 1, 0, 0, 3, 2
 	};
 
 	UniquePtr<VertexBuffer> vertexBuffer = MakeUnique<VertexBuffer>(*context, vertices, sizeof(vertices));
@@ -210,7 +213,7 @@ int main()
 		// Draw command
 		DrawIndexedAttributes attr;
 		attr.indexType = ValueType::UINT32;
-		attr.numIndices = 3;
+		attr.numIndices = 6;
 		attr.flags = DrawFlags::VERIFY_ALL;
 
 		context->drawIndexed(attr);
@@ -234,6 +237,21 @@ int main()
 		screenAttr.flags = DrawFlags::VERIFY_ALL;
 
 		context->drawIndexed(screenAttr);
+
+		int32_t mX, mY;
+		Input::getMousePosition(&mX, &mY);
+
+		ImGuiIO& io = ImGui::GetIO();
+		io.DisplaySize = ImVec2(1280, 720);
+		io.MousePos = ImVec2(static_cast<float>(mX), static_cast<float>(mY));
+		io.MouseDown[0] = Input::isMouseDown(COBALT_MOUSE_BUTTON_LEFT);
+
+		ImGui::NewFrame();
+		ImGui::Begin("Cobalt");
+
+		ImGui::Text("Cobalt Text UI Test");
+		ImGui::End();
+		ImGui::Render();
 
 		window->poll();
 		context->present();

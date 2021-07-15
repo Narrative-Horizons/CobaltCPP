@@ -29,27 +29,55 @@ namespace cobalt
 
 		_isOpen = true;
 
-		glfwSetKeyCallback(static_cast<GLFWwindow*>(_glfwWindow), [](GLFWwindow* window, const int32_t aKey, const int32_t aScanCode, const int32_t aAction, const int32_t aMods)
+		glfwSetKeyCallback(static_cast<GLFWwindow*>(_glfwWindow), [](GLFWwindow* window, const int32_t key, const int32_t scanCode, const int32_t action, const int32_t mods)
 		{
-			switch (aAction)
+			switch (action)
 			{
 				case GLFW_PRESS:
 				{
-					Input::_setKeyPressed(aKey);
+					Input::_setKeyPressed(key);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
-					Input::_setKeyReleased(aKey);
+					Input::_setKeyReleased(key);
 					break;
 				}
 				case GLFW_REPEAT:
 				{
-					Input::_setKeyPressed(aKey);
+					Input::_setKeyPressed(key);
 					break;
 				}
 				default: break;
 			}
+		});
+
+		glfwSetMouseButtonCallback(static_cast<GLFWwindow*>(_glfwWindow), [](GLFWwindow* window, const int32_t button, const int32_t action, const int32_t mods)
+		{
+			switch(action)
+			{
+				case GLFW_PRESS:
+				{
+					Input::_setMousePressed(button);
+					break;
+				}
+				case GLFW_RELEASE:
+				{
+					Input::_setMouseReleased(button);
+					break;
+				}
+				case GLFW_REPEAT:
+				{
+					Input::_setMousePressed(button);
+					break;
+				}
+				default: break;
+			}
+		});
+
+		glfwSetCursorPosCallback(static_cast<GLFWwindow*>(_glfwWindow), [](GLFWwindow* window, double xpos, double ypos)
+		{
+			Input::_setMousePosition(static_cast<int32_t>(xpos), static_cast<int32_t>(ypos));
 		});
 	}
 

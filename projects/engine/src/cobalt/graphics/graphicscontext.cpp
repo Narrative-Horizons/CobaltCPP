@@ -14,6 +14,7 @@
 #include "indexbufferhelper.hpp"
 
 #include <cobalt/graphics/shader.hpp>
+#include <cobalt/input.hpp>
 
 namespace cobalt
 {
@@ -217,20 +218,9 @@ namespace cobalt
 	void GraphicsContext::present() const
 	{
 		_impl->guiRenderer->NewFrame(1280, 720, Diligent::SURFACE_TRANSFORM_IDENTITY);
-
-		ImGuiIO& io = ImGui::GetIO();
-		io.DisplaySize = ImVec2(1280, 720);
-
-		ImGui::NewFrame();
-		ImGui::Begin("Cobalt");
-
-		ImGui::Text("Cobalt Text UI Test");
-		ImGui::End();
-		ImGui::Render();
-		
-		_impl->guiRenderer->EndFrame();
 		_impl->guiRenderer->RenderDrawData(_impl->immediateContext, ImGui::GetDrawData());
-		
+		_impl->guiRenderer->EndFrame();
+
 		_impl->swapChain->Present(static_cast<uint32_t>(_impl->window->vSyncEnabled()));
 	}
 
