@@ -24,6 +24,12 @@ project("Entrypoint")
         "Engine",
     })
 
+    filter("system:Windows")
+
+        linkoptions({
+            "/IGNORE:4099"
+        })
+
     filter("Debug")
         symbols("On")
 

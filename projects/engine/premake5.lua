@@ -41,6 +41,11 @@ project("Engine")
 
     filter("system:Windows")
 
+        linkoptions({
+            "/IGNORE:4006",
+            "/IGNORE:4099"
+        })
+
         defines({
             "PLATFORM_WIN32",
             "GLFW_EXPOSE_NATIVE_WIN32",

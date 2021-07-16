@@ -10,4 +10,10 @@ namespace cobalt
 		return ptr;
 	}
 
+	bool detail::RequireTrueImpl(const bool value)
+	{
+		assert(value);
+		return value;
+	}
+
 }

@@ -4,6 +4,8 @@
 #include <cobalt/containers/utility.hpp>
 #include <cobalt/macros.hpp>
 
+#include <cstddef>
+
 namespace cobalt
 {
 	using NullPtr = decltype(nullptr);
@@ -35,6 +37,38 @@ namespace cobalt
 
 	private:
 		T* _payload;
+	};
+
+	template <typename T>
+	class UniquePtr<T[]>
+	{
+	public:
+		UniquePtr() noexcept;
+		UniquePtr(NullPtr) noexcept;
+		UniquePtr(T* ptr, std::size_t count) noexcept;
+		UniquePtr(const UniquePtr&) = delete;
+		UniquePtr(UniquePtr&& ptr) noexcept;
+		~UniquePtr();
+
+		UniquePtr& operator=(const UniquePtr&) = delete;
+		UniquePtr& operator=(UniquePtr&& ptr) noexcept;
+		UniquePtr& operator=(NullPtr) noexcept;
+
+		T* release();
+		void reset();
+		void swap(UniquePtr& ptr) noexcept;
+
+		T* get() const noexcept;
+		operator bool() const noexcept;
+
+		T& operator*() const;
+		T* operator->() const noexcept;
+
+		T& operator[](const std::size_t index) const noexcept;
+
+	private:
+		T* _payload;
+		size_t _count;
 	};
 
 	namespace detail
@@ -322,7 +356,232 @@ namespace cobalt
 	}
 
 	template <typename T, typename U>
-	bool operator==(const SharedPtr<T>& lhs, const SharedPtr<T>& rhs) noexcept
+	inline bool operator==(const UniquePtr<T[]>& lhs, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return lhs.get() == rhs.get();
+	}
+
+	template <typename T>
+	inline bool operator==(const UniquePtr<T[]>& lhs, NullPtr) noexcept
+	{
+		return lhs.get() == nullptr;
+	}
+
+	template <typename T>
+	inline bool operator==(NullPtr, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return nullptr == rhs.get();
+	}
+
+	template <typename T, typename U>
+	inline bool operator!=(const UniquePtr<T[]>& lhs, const UniquePtr<U[]>& rhs)
+	{
+		return lhs.get() != rhs.get();
+	}
+
+	template <typename T>
+	inline bool operator!=(const UniquePtr<T[]>& lhs, NullPtr) noexcept
+	{
+		return lhs.get() != nullptr;
+	}
+
+	template <typename T>
+	inline bool operator!=(NullPtr, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return nullptr != rhs.get();
+	}
+
+	template <typename T, typename U>
+	inline bool operator<(const UniquePtr<T[]>& lhs, const UniquePtr<U[]>& rhs)
+	{
+		return lhs.get() < rhs.get();
+	}
+
+	template <typename T>
+	inline bool operator<(const UniquePtr<T[]>& lhs, NullPtr) noexcept
+	{
+		return lhs.get() < nullptr;
+	}
+
+	template <typename T>
+	inline bool operator<(NullPtr, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return nullptr < rhs.get();
+	}
+
+	template <typename T, typename U>
+	inline bool operator<=(const UniquePtr<T[]>& lhs, const UniquePtr<U[]>& rhs)
+	{
+		return lhs.get() <= rhs.get();
+	}
+
+	template <typename T>
+	inline bool operator<=(const UniquePtr<T[]>& lhs, NullPtr) noexcept
+	{
+		return lhs.get() <= nullptr;
+	}
+
+	template <typename T>
+	inline bool operator<=(NullPtr, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return nullptr <= rhs.get();
+	}
+
+	template <typename T, typename U>
+	inline bool operator>(const UniquePtr<T[]>& lhs, const UniquePtr<U[]>& rhs)
+	{
+		return lhs.get() > rhs.get();
+	}
+
+	template <typename T>
+	inline bool operator>(const UniquePtr<T[]>& lhs, NullPtr) noexcept
+	{
+		return lhs.get() > nullptr;
+	}
+
+	template <typename T>
+	inline bool operator>(NullPtr, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return nullptr > rhs.get();
+	}
+
+	template <typename T, typename U>
+	inline bool operator>=(const UniquePtr<T[]>& lhs, const UniquePtr<U[]>& rhs)
+	{
+		return lhs.get() >= rhs.get();
+	}
+
+	template <typename T>
+	inline bool operator>=(const UniquePtr<T[]>& lhs, NullPtr) noexcept
+	{
+		return lhs.get() >= nullptr;
+	}
+
+	template <typename T>
+	inline bool operator>=(NullPtr, const UniquePtr<T[]>& rhs) noexcept
+	{
+		return nullptr >= rhs.get();
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]> MakeUnique(std::size_t count)
+	{
+		UniquePtr<T[]> value(new T[count], count);
+		return value;
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>::UniquePtr() noexcept
+		: UniquePtr(nullptr)
+	{
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>::UniquePtr(NullPtr) noexcept
+		: UniquePtr(static_cast<T*>(nullptr))
+	{
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>::UniquePtr(T* ptr, std::size_t count) noexcept
+		: _payload(ptr), _count(count)
+	{
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>::UniquePtr(UniquePtr&& ptr) noexcept
+		: _payload(ptr._payload), _count(ptr._count)
+	{
+		ptr._payload = nullptr;
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>::~UniquePtr()
+	{
+		reset();
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>& UniquePtr<T[]>::operator=(UniquePtr&& ptr) noexcept
+	{
+		reset()
+		_payload = ptr._payload;
+		ptr._payload = nullptr;
+		_count = ptr._count;
+
+		return *this;
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>& UniquePtr<T[]>::operator=(NullPtr) noexcept
+	{
+		reset()
+		_payload = nullptr;
+		_count = 0;
+		return *this;
+	}
+
+	template<typename T>
+	inline T* UniquePtr<T[]>::release()
+	{
+		T* result = _payload;
+		_payload = nullptr;
+		_count = 0;
+		return result;
+	}
+
+	template<typename T>
+	inline void UniquePtr<T[]>::reset()
+	{
+		delete[] _payload;
+		_payload = nullptr;
+	}
+
+	template<typename T>
+	inline void UniquePtr<T[]>::swap(UniquePtr& ptr) noexcept
+	{
+		auto tmpPtr = ptr._payload;
+		ptr._payload = _payload;
+		_payload = tmpPtr;
+
+		auto tmpCount = ptr._count;
+		ptr._count = _count;
+		_count = tmpCount;
+	}
+
+	template<typename T>
+	inline T* UniquePtr<T[]>::get() const noexcept
+	{
+		return _payload;
+	}
+
+	template<typename T>
+	inline UniquePtr<T[]>::operator bool() const noexcept
+	{
+		return _payload != nullptr;
+	}
+
+	template<typename T>
+	inline T& UniquePtr<T[]>::operator*() const
+	{
+		return *RequireNotNull(_payload);
+	}
+
+	template<typename T>
+	inline T* UniquePtr<T[]>::operator->() const noexcept
+	{
+		return _payload;
+	}
+
+	template<typename T>
+	inline T& UniquePtr<T[]>::operator[](const std::size_t index) const noexcept
+	{
+		RequireLessThan(index, _count);
+		return _payload[index];
+	}
+
+	template <typename T, typename U>
+	inline bool operator==(const SharedPtr<T>& lhs, const SharedPtr<T>& rhs) noexcept
 	{
 		return lhs.get() == rhs.get();
 	}

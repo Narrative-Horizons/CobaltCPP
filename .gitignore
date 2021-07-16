@@ -4,6 +4,7 @@
 
 # IDE
 .vs/
+.vscode/
 *.sln
 *.vcxproj
 *.vcxproj.filters

@@ -5,6 +5,8 @@
 #include <cobalt/window.hpp>
 #include <cobalt/input.hpp>
 
+#include <cobalt/entities/sparsepool.hpp>
+
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
 #include <cobalt/graphics/vertexbuffer.hpp>
@@ -44,6 +46,8 @@ struct CBuffer
 
 int main()
 {
+	SparsePool<int, 4096> pool;
+
 	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
 	createInfo.height = 720;
