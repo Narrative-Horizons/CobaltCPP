@@ -41,6 +41,7 @@ namespace cobalt
 			T* tryGet(const Identifier id) const noexcept;
 			std::optional<T> replace(const Identifier id, const T& value);
 			std::optional<T> replace(const Identifier id, T&& value);
+			void remove(const Identifier id);
 			
 		private:
 			std::vector<UniquePtr<Identifier[]>> _sparse;
@@ -222,6 +223,32 @@ namespace cobalt
 			std::optional<T> prev(_components[i.index]);
 			_components[i.index] = forward<T>(value);
 			return prev;
+		}
+	}
+
+	template <typename T, std::size_t PageSize>
+	void SparsePool<T, PageSize>::remove(const Identifier id)
+	{
+		const auto pg = _page(id);
+		const auto offset = _offset(id);
+		if (pg < _sparse.size())
+		{
+			const auto& sparseId = _sparse[pg][offset];
+			if (sparseId != Identifier::Invalid)
+			{
+				const auto packedIdx = sparseId.index;
+				const auto& last = _components.back();
+				_components[packedIdx] = last;
+				_components.pop_back();
+
+				const auto back = _packed.back();
+				const auto backPg = _page(back);
+				const auto backOffset = _offset(back);
+				_packed[_packed.size() - 1] = id;
+				_sparse[backPg][backOffset] = sparseId;
+				_sparse[pg][offset] = Identifier::Invalid;
+				_packed.pop_back();
+			}
 		}
 	}
 }
