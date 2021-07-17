@@ -76,6 +76,7 @@ namespace cobalt
 			COBALT_NO_COPY_MOVE(Shader)
 
 			void setData(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data) const;
+			void setDataArray(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data) const;
 			void setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, const Framebuffer& framebuffer, uint32_t index) const;
 
 		private:

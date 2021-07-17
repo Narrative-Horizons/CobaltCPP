@@ -25,6 +25,9 @@ namespace cobalt
 	struct ShaderResource::ShaderResourceImpl
 	{
 		Diligent::RefCntAutoPtr<Diligent::IDeviceObject> objectData;
+		//Diligent::RefCntAutoPtr<Diligent::IDeviceObject*> arrayData;
+
+		uint32_t numElements = 1;
 	};
 
 	class ShaderHelper
@@ -48,6 +51,8 @@ namespace cobalt
 			explicit ShaderResourceHelper(const ShaderResource& resource);
 
 			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IDeviceObject> getResourceObject() const;
+			//COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IDeviceObject*> getResourceObjects() const;
+			COBALT_NO_DISCARD uint32_t getResourceObjectsCount() const;
 
 		private:
 			const ShaderResource& _resource;

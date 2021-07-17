@@ -71,6 +71,7 @@ namespace cobalt
 	ScreenResolvePass::~ScreenResolvePass()
 	{
 		delete _impl;
+		_impl = nullptr;
 	}
 
 	void ScreenResolvePass::setInputTexture(const UniquePtr<Framebuffer> buffer, const uint32_t index) const

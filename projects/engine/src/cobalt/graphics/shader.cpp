@@ -228,6 +228,23 @@ namespace cobalt
 		}
 	}
 
+	void Shader::setDataArray(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name,
+		ShaderResource& data) const
+	{
+		const ShaderResourceHelper resourceHelper(data);
+
+		switch (resourceType)
+		{
+			case ShaderResourceType::MUTABLE:
+			case ShaderResourceType::DYNAMIC:
+			{
+				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
+				//x->SetArray(resourceHelper.getResourceObjects(), 0, resourceHelper.getResourceObjectsCount());
+				break;
+			}
+		}
+	}
+
 	void Shader::setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, const Framebuffer& framebuffer, const uint32_t index) const
 	{
 		const FramebufferHelper resourceHelper(framebuffer);
@@ -243,4 +260,6 @@ namespace cobalt
 			}
 		}
 	}
+
+	
 }

@@ -35,4 +35,14 @@ namespace cobalt
 	{
 		return _resource._impl->objectData;
 	}
+
+	/*Diligent::RefCntAutoPtr<Diligent::IDeviceObject*> ShaderResourceHelper::getResourceObjects() const
+	{
+		return _resource._impl->arrayData;
+	}*/
+
+	uint32_t ShaderResourceHelper::getResourceObjectsCount() const
+	{
+		return _resource._impl->numElements;
+	}
 }
