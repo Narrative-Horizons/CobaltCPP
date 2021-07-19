@@ -2,7 +2,7 @@
 
 namespace cobalt
 {
-    template <class T>
+    template <typename T>
     struct type_identity
     {
         using type = T;
@@ -120,7 +120,7 @@ namespace cobalt
     template <typename T>
     using remove_reference_t = typename remove_reference<T>::type;
 
-    template< class T >
+    template< typename T >
     struct is_void : is_same<void, typename remove_cv<T>::type> 
     {
     };
@@ -136,21 +136,21 @@ namespace cobalt
     };
 
     namespace detail {
-        template <class T>
+        template <typename T>
         auto try_add_lvalue_reference(int) -> type_identity<T&>;
-        template <class T>
+        template <typename T>
         auto try_add_lvalue_reference(...) -> type_identity<T>;
 
-        template <class T>
+        template <typename T>
         auto try_add_rvalue_reference(int) -> type_identity<T&&>;
-        template <class T>
+        template <typename T>
         auto try_add_rvalue_reference(...) -> type_identity<T>;
     }
 
-    template <class T>
+    template <typename T>
     struct add_lvalue_reference : decltype(detail::try_add_lvalue_reference<T>(0)) {};
 
-    template <class T>
+    template <typename T>
     struct add_rvalue_reference : decltype(detail::try_add_rvalue_reference<T>(0)) {};
 
     template <typename T>
@@ -185,11 +185,13 @@ namespace cobalt
     template <bool B, typename T, typename F>
     using conditional_t = typename conditional<B, T, F>::type;
 
-    template<typename...> struct conjunction : true_type
+    template<typename...>
+    struct conjunction : true_type
     {
     };
 
-    template<typename B1> struct conjunction<B1> : B1
+    template<typename B1>
+    struct conjunction<B1> : B1
     {
     };
 
@@ -201,29 +203,30 @@ namespace cobalt
     template<typename... B>
     inline constexpr bool conjunction_v = conjunction<B...>::value;
 
-    template<class From, class To>
-    struct is_nothrow_convertible : std::conjunction<std::is_void<From>, std::is_void<To>> {};
+    template<typename From, typename To>
+    struct is_nothrow_convertible : conjunction<is_void<From>, is_void<To>> {};
 
-    template<class T>
-    typename add_rvalue_reference<T>::type declval() noexcept;
+    template<typename T>
+    typename add_rvalue_reference<T>::type declval() noexcept; // intentional no impl
 
     namespace detail {
-        template<class T>
+        template<typename T>
         auto test_returnable(int) -> decltype(
             void(static_cast<T(*)()>(nullptr)), true_type{}
         );
-        template<class>
-        auto test_returnable(...) -> false_type;
 
-        template<class From, class To>
+        template<typename>
+        auto test_returnable(...) -> false_type;  // intentional no impl
+
+        template<typename From, typename To>
         auto test_implicitly_convertible(int) -> decltype(
             void(cobalt::declval<void(&)(To)>()(cobalt::declval<From>())), true_type{}
-        );
-        template<class, class>
-        auto test_implicitly_convertible(...) -> false_type;
+        ); // intentional no impl
+        template<typename, typename>
+        auto test_implicitly_convertible(...) -> false_type; // intentional no impl
     }
 
-    template<class From, class To>
+    template<typename From, typename To>
     struct is_convertible : integral_constant<bool,
         (decltype(detail::test_returnable<To>(0))::value&&
             decltype(detail::test_implicitly_convertible<From, To>(0))::value) ||

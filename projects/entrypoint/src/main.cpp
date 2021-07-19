@@ -5,7 +5,7 @@
 #include <cobalt/window.hpp>
 #include <cobalt/input.hpp>
 
-#include <cobalt/entities/sparsepool.hpp>
+#include <cobalt/entities/entity.hpp>
 
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
@@ -46,7 +46,11 @@ struct CBuffer
 
 int main()
 {
-	SparsePool<int, 4096> pool;
+	Registry reg;
+	for (auto v : reg.view<int>())
+	{
+		
+	}
 
 	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
