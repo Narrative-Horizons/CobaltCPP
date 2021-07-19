@@ -10,8 +10,35 @@
 
 namespace cobalt
 {
-	template <typename T, std::size_t PageSize>
-	class SparsePool
+	class BaseSparsePool
+	{
+		public:
+			virtual ~BaseSparsePool() = default;
+			virtual void remove(const Identifier id) = 0;
+	};
+
+	template <typename T>
+	class NoOpSparsePool final : public BaseSparsePool
+	{
+		public:
+			NoOpSparsePool();
+			COBALT_NO_COPY_MOVE(NoOpSparsePool);
+
+			void reserve(const std::size_t capacity);
+			void shrinkToFit();
+			T& assign(const Identifier id, const T& value);
+			T& assign(const Identifier id, T&& value);
+			COBALT_NO_DISCARD bool contains(const Identifier id) const noexcept;
+			Identifier identityAt(const std::size_t index) const noexcept;
+			T& get(const Identifier id) const noexcept;
+			T* tryGet(const Identifier id) const noexcept;
+			std::optional<T> replace(const Identifier id, const T& value);
+			std::optional<T> replace(const Identifier id, T&& value);
+			void remove(const Identifier id) override;
+	};
+
+	template <typename T, std::size_t PageSize = 4096>
+	class SparsePool final : public BaseSparsePool
 	{
 		public:
 			using size_type = std::size_t;
@@ -31,6 +58,9 @@ namespace cobalt
 			COBALT_NO_DISCARD page_type& _assure(const std::size_t page);
 
 		public:
+			SparsePool() = default;
+			COBALT_NO_COPY_MOVE(SparsePool);
+
 			void reserve(const std::size_t capacity);
 			void shrinkToFit();
 			T& assign(const Identifier id, const T& value);
@@ -41,14 +71,85 @@ namespace cobalt
 			T* tryGet(const Identifier id) const noexcept;
 			std::optional<T> replace(const Identifier id, const T& value);
 			std::optional<T> replace(const Identifier id, T&& value);
-			void remove(const Identifier id);
+			void remove(const Identifier id) override;
+
+			auto begin() noexcept;
+			const auto begin() const noexcept;
+			const auto cbegin() const noexcept;
+
+			auto end() noexcept;
+			const auto end() const noexcept;
+			const auto cend() const noexcept;
 			
 		private:
 			std::vector<UniquePtr<Identifier[]>> _sparse;
 			std::vector<Identifier> _packed;
 			std::vector<T> _components;
 	};
-	
+
+	template <typename T>
+	void NoOpSparsePool<T>::reserve(const std::size_t capacity)
+	{
+	}
+
+	template <typename T>
+	void NoOpSparsePool<T>::shrinkToFit()
+	{
+	}
+
+	template <typename T>
+	T& NoOpSparsePool<T>::assign(const Identifier id, const T& value)
+	{
+		return value;
+	}
+
+	template <typename T>
+	T& NoOpSparsePool<T>::assign(const Identifier id, T&& value)
+	{
+		return value;
+	}
+
+	template <typename T>
+	bool NoOpSparsePool<T>::contains(const Identifier id) const noexcept
+	{
+		return false;
+	}
+
+	template <typename T>
+	Identifier NoOpSparsePool<T>::identityAt(const std::size_t index) const noexcept
+	{
+		return Identifier::Invalid;
+	}
+
+	template <typename T>
+	T& NoOpSparsePool<T>::get(const Identifier id) const noexcept
+	{
+		return *get();
+	}
+
+	template <typename T>
+	T* NoOpSparsePool<T>::tryGet(const Identifier id) const noexcept
+	{
+		return nullptr;
+	}
+
+	template <typename T>
+	std::optional<T> NoOpSparsePool<T>::replace(const Identifier id, const T& value)
+	{
+		return std::optional<T>();
+	}
+
+	template <typename T>
+	std::optional<T> NoOpSparsePool<T>::replace(const Identifier id, T&& value)
+	{
+		return std::optional<T>();
+	}
+
+	template <typename T>
+	void NoOpSparsePool<T>::remove(const Identifier id)
+	{
+	}
+
 	template <typename T, std::size_t PageSize>
 	typename SparsePool<T, PageSize>::page_type& SparsePool<T, PageSize>::_assure(const std::size_t page)
 	{
@@ -250,5 +351,41 @@ namespace cobalt
 				_packed.pop_back();
 			}
 		}
+	}
+
+	template <typename T, std::size_t PageSize>
+	auto SparsePool<T, PageSize>::begin() noexcept
+	{
+		return _components.begin();
+	}
+
+	template <typename T, std::size_t PageSize>
+	const auto SparsePool<T, PageSize>::begin() const noexcept
+	{
+		return _components.begin();
+	}
+
+	template <typename T, std::size_t PageSize>
+	const auto SparsePool<T, PageSize>::cbegin() const noexcept
+	{
+		return _components.cbegin();
+	}
+
+	template <typename T, std::size_t PageSize>
+	auto SparsePool<T, PageSize>::end() noexcept
+	{
+		return _components.end();
+	}
+
+	template <typename T, std::size_t PageSize>
+	const auto SparsePool<T, PageSize>::end() const noexcept
+	{
+		return _components.end();
+	}
+
+	template <typename T, std::size_t PageSize>
+	const auto SparsePool<T, PageSize>::cend() const noexcept
+	{
+		return _components.cend();
 	}
 }

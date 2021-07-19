@@ -46,6 +46,11 @@ namespace cobalt
 	{
 		return _id;
 	}
+
+	bool Entity::valid() const noexcept
+	{
+		return _reg->valid(_id);
+	}
 	
 	void Entity::invalidate()
 	{
@@ -58,12 +63,64 @@ namespace cobalt
 		invalidate();
 	}
 
+	Registry::~Registry()
+	{
+		for (auto pool : _memPools)
+		{
+			if (pool)
+			{
+				delete pool;
+			}
+		}
+		_memPools.clear();
+	}
+
 	Entity Registry::create()
 	{
-		return Entity();
+		const auto id = _nextAvailable == Identifier::Invalid ? _createNewId() : _recycleId();
+		return Entity(this, id);
 	}
 
 	void Registry::release(const Identifier id)
 	{
+		// For each memory pool, release the entity
+		for (const auto pool : _memPools)
+		{
+			if (pool)
+			{
+				pool->remove(id);
+			}
+		}
+
+		const auto identifier = id.index;
+		const auto version = id.version + 1; // on release, increment version
+		_entities[identifier] = Identifier::construct(_nextAvailable.index, version);
+		_nextAvailable = Identifier::construct(identifier, 0);
+	}
+
+	bool Registry::valid(const Identifier id) const noexcept
+	{
+		const auto idx = id.index;
+		return idx < _entities.size() && _entities[idx] == id;
+	}
+
+	Identifier Registry::_createNewId()
+	{
+		// Add a new entity
+		const auto id = _entities.size();
+		const auto version = 0;
+		const Identifier identifier = Identifier::construct(static_cast<std::uint32_t>(id), static_cast<std::uint32_t>(version));
+		_entities.emplace_back(identifier);
+		return identifier;
+	}
+
+	Identifier Registry::_recycleId()
+	{
+		// Recycles an old identifier from the implicit free list
+		const auto id = _nextAvailable.index;
+		const auto version = _entities[id].version;
+		_nextAvailable = _entities[id];
+		_entities[id] = Identifier::construct(id, version);
+		return _entities[id];
 	}
 }
