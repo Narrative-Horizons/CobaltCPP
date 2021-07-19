@@ -36,7 +36,7 @@ namespace cobalt
 			Registry* _reg;
 	};
 
-	template <typename T>
+	template <typename T, std::size_t PageSize>
 	class ComponentView
 	{
 		public:
@@ -50,7 +50,7 @@ namespace cobalt
 		private:
 			friend class Registry;
 
-			ComponentView(SparsePool<T>* pool);
+			ComponentView(SparsePool<T, traits<T>::poolSize()>* pool);
 
 			SparsePool<T>* _pool;
 	};
@@ -80,6 +80,9 @@ namespace cobalt
 
 			template <typename T>
 			void replace(const Identifier id, const T& value) const noexcept;
+
+			template <typename T>
+			ComponentView<T, traits<T>::poolSize()> view() noexcept;
 			
 		private:
 			Identifier _createNewId();
@@ -93,58 +96,64 @@ namespace cobalt
 			SparsePool<T>& _assure();
 	};
 
-	template <typename T>
-	auto ComponentView<T>::begin() noexcept
+	template <typename T, std::size_t PageSize>
+	ComponentView<T, PageSize>::ComponentView(SparsePool<T, traits<T>::poolSize()>* pool)
+		: _pool(pool)
+	{
+	}
+
+	template <typename T, std::size_t PageSize>
+	inline auto ComponentView<T, PageSize>::begin() noexcept
 	{
 		return _pool->begin();
 	}
 
-	template <typename T>
-	const auto ComponentView<T>::begin() const noexcept
+	template <typename T, std::size_t PageSize>
+	inline const auto ComponentView<T, PageSize>::begin() const noexcept
 	{
 		return _pool->begin();
 	}
 
-	template <typename T>
-	const auto ComponentView<T>::cbegin() const noexcept
+	template <typename T, std::size_t PageSize>
+	inline const auto ComponentView<T, PageSize>::cbegin() const noexcept
 	{
 		return _pool->cbegin();
 	}
 
-	template <typename T>
-	auto ComponentView<T>::end() noexcept
+	template <typename T, std::size_t PageSize>
+	inline auto ComponentView<T, PageSize>::end() noexcept
 	{
 		return _pool->end();
 	}
 
-	template <typename T>
-	const auto ComponentView<T>::end() const noexcept
+	template <typename T, std::size_t PageSize>
+	inline const auto ComponentView<T, PageSize>::end() const noexcept
 	{
 		return _pool->end();
 	}
 
-	template <typename T>
-	const auto ComponentView<T>::cend() const noexcept
+	template <typename T, std::size_t PageSize>
+	inline const auto ComponentView<T, PageSize>::cend() const noexcept
 	{
 		return _pool->cend();
 	}
 
 	template <typename T>
-	void Registry::assign(const Identifier id, const T& value)
+	inline void Registry::assign(const Identifier id, const T& value)
 	{
 		SparsePool<T>& pool = _assure<T>();
 		pool.assign(id, value);
 	}
 
 	template <typename T>
-	bool Registry::contains(const Identifier id) const noexcept
+	inline bool Registry::contains(const Identifier id) const noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
 		return pool.contains(id);
 	}
 
 	template <typename T1, typename T2, typename ... Ts>
-	bool Registry::contains(const Identifier id) const noexcept
+	inline bool Registry::contains(const Identifier id) const noexcept
 	{
 		if constexpr (sizeof...(Ts) == 0)
 		{
@@ -153,32 +162,38 @@ namespace cobalt
 	}
 
 	template <typename T>
-	void Registry::remove(const Identifier id) const noexcept
+	inline void Registry::remove(const Identifier id) const noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
 		pool.remove(id);
 	}
 
 	template <typename T>
-	void Registry::replace(const Identifier id, const T& value) const noexcept
+	inline void Registry::replace(const Identifier id, const T& value) const noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
 		pool.replace(id, value);
 	}
 
+	template<typename T>
+	inline ComponentView<T, traits<T>::poolSize()> Registry::view() noexcept
+	{
+		return ComponentView<T, traits<T>::poolSize()>(&_assure<T>());
+	}
+
 	template <typename T>
-	SparsePool<T>& Registry::_assure()
+	inline SparsePool<T>& Registry::_assure()
 	{
 		const auto id = traits<T>::identifier();
-		_memPools.reserve(id + 1);
-		auto pool = _memPools[id]
-		if (pool != nullptr)
+		_memPools.resize(static_cast<std::size_t>(id) + 1ull);
+		auto pool = _memPools[id];
+		if (pool == nullptr)
 		{
 			constexpr size_t poolSize = traits<T>::poolSize();
 			pool = new SparsePool<T, poolSize>();
 			_memPools[id] = pool;
 		}
-		return *pool;
+		return *((SparsePool<T>*)pool);
 	}
 
 }

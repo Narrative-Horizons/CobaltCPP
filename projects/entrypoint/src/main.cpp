@@ -47,6 +47,10 @@ struct CBuffer
 int main()
 {
 	Registry reg;
+	for (auto v : reg.view<int>())
+	{
+		
+	}
 
 	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
