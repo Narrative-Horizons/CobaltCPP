@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
-#include <DiligentCore/Graphics/GraphicsEngine/interface/TextureView.h>
 
 #include <cobalt/graphics/shader.hpp>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/PipelineState.h>
