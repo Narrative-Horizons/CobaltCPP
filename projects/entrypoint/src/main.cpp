@@ -12,35 +12,23 @@
 #include <cobalt/graphics/vertexbuffer.hpp>
 #include <cobalt/graphics/indexbuffer.hpp>
 #include <cobalt/graphics/uniformbuffer.hpp>
-#include <cobalt/graphics/shaderstoragebuffer.hpp>
 #include <cobalt/graphics/image.hpp>
 #include <cobalt/graphics/texture.hpp>
+
+#include <cobalt/math/math.hpp>
+#include <cobalt/math/gtx/transform.hpp>
 
 #include <imgui.h>
 
 using namespace cobalt;
 
-/*
-extern int WINAPI main(HINSTANCE instance, HINSTANCE, LPSTR, int cmdShow);
-
-int WINAPI WinMain(HINSTANCE instance,
-	HINSTANCE hPrevInstance,
-	LPSTR     lpCmdLine,
-	int       nShowCmd)
-{
-	main(instance, NULL, NULL, nShowCmd);
-	*/
-
 struct CBuffer
 {
-	float buffer[16];
+	math::mat4 model;
 
 	CBuffer()
 	{
-		for (float& i : buffer)
-		{
-			i = 0.0f;
-		}
+		model = math::mat4(1.0f);
 	}
 };
 
@@ -132,11 +120,6 @@ int main()
 
 	CBuffer cBuffer;
 
-	cBuffer.buffer[0] = 1.0f;
-	cBuffer.buffer[5] = 1.0f;
-	cBuffer.buffer[10] = 1.0f;
-	cBuffer.buffer[15] = 1.0f;
-
 	UniquePtr<Image> image = MakeUnique<Image>("data/textures/shawn.png");
 	
 	TextureCreateInfo texCreateInfo;
@@ -201,6 +184,12 @@ int main()
 		{
 			window->close();
 		}
+
+		if(Input::isKeyDown(COBALT_KEY_D))
+		{
+			cBuffer.model = math::translate(cBuffer.model, math::vec3(0.001f, 0, 0));
+		}
+		
 
 		context->setRenderTarget(renderBuffer, ResourceStateTransitionMode::TRANSITION);
 		

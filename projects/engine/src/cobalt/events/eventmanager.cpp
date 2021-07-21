@@ -5,9 +5,9 @@ namespace cobalt
 {
 	EventManager::~EventManager()
 	{
-		for(auto& cbs : _callbacks)
+		for(auto& [fst, snd] : _callbacks)
 		{
-			for(auto& cb : cbs.second)
+			for(auto& cb : snd)
 			{
 				delete cb.second;
 			}
