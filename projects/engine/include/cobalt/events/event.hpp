@@ -10,7 +10,7 @@ namespace cobalt
 		public:
 			virtual ~AEvent() = default;
 
-			COBALT_NO_DISCARD size_t getId() const
+			COBALT_NO_DISCARD size_t getId() const noexcept
 			{
 				return _id;
 			}
@@ -25,36 +25,29 @@ namespace cobalt
 	{
 		public:
 			Event();
-			explicit Event(const size_t id);
+			explicit Event(const size_t id) noexcept;
+			virtual ~Event() override = default;
 
-			virtual ~Event() override;
-
-			static size_t getType();
+			static size_t getType() noexcept;
 
 		private:
 			static size_t _sThisEvent;
 	};
 	
 	template<typename Type>
-	Event<Type>::Event()
+	inline Event<Type>::Event()
 	{
 		_id = Event<Type>::getType();
 	}
 
 	template <typename Type>
-	Event<Type>::Event(const size_t id)
+	inline Event<Type>::Event(const size_t id) noexcept
 	{
 		_id = id;
 	}
 
 	template <typename Type>
-	Event<Type>::~Event()
-	{
-		
-	}
-
-	template <typename Type>
-	size_t Event<Type>::getType()
+	inline size_t Event<Type>::getType() noexcept
 	{
 		static size_t type = _sId++;
 		_sThisEvent = type;
@@ -63,5 +56,5 @@ namespace cobalt
 	}
 
 	template<typename Type>
-	size_t Event<Type>::_sThisEvent = 0;
+	inline size_t Event<Type>::_sThisEvent = 0;
 }

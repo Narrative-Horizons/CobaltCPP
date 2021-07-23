@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 namespace cobalt
 {
     template <typename T>
@@ -120,7 +122,7 @@ namespace cobalt
     template <typename T>
     using remove_reference_t = typename remove_reference<T>::type;
 
-    template< typename T >
+    template < typename T >
     struct is_void : is_same<void, typename remove_cv<T>::type> 
     {
     };
@@ -156,18 +158,18 @@ namespace cobalt
     template <typename T>
     constexpr bool is_lvalue_reference_v = is_lvalue_reference<T>::value;
 
-    template<bool B, typename T = void>
+    template <bool B, typename T = void>
     struct enable_if 
     {
     };
 
-    template<typename T>
+    template <typename T>
     struct enable_if<true, T>
     {
         using type = T; 
     };
 
-    template<bool B, typename T = void>
+    template <bool B, typename T = void>
     using enable_if_t = typename enable_if<B, T>::type;
 
     template <bool B, typename T, typename F>
@@ -185,52 +187,91 @@ namespace cobalt
     template <bool B, typename T, typename F>
     using conditional_t = typename conditional<B, T, F>::type;
 
-    template<typename...>
+    template <typename...>
     struct conjunction : true_type
     {
     };
 
-    template<typename B1>
+    template <typename B1>
     struct conjunction<B1> : B1
     {
     };
 
-    template<typename B1, typename... Bn>
+    template <typename B1, typename... Bn>
     struct conjunction<B1, Bn...> : conditional_t<bool(B1::value), conjunction<Bn...>, B1>
     {
     };
 
-    template<typename... B>
+    template <typename... B>
     inline constexpr bool conjunction_v = conjunction<B...>::value;
 
-    template<typename From, typename To>
+    template <typename From, typename To>
     struct is_nothrow_convertible : conjunction<is_void<From>, is_void<To>> {};
 
-    template<typename T>
+    template <typename T>
     typename add_rvalue_reference<T>::type declval() noexcept; // intentional no impl
 
     namespace detail {
-        template<typename T>
+        template <typename T>
         auto test_returnable(int) -> decltype(
             void(static_cast<T(*)()>(nullptr)), true_type{}
         );
 
-        template<typename>
+        template <typename>
         auto test_returnable(...) -> false_type;  // intentional no impl
 
-        template<typename From, typename To>
+        template <typename From, typename To>
         auto test_implicitly_convertible(int) -> decltype(
             void(cobalt::declval<void(&)(To)>()(cobalt::declval<From>())), true_type{}
         ); // intentional no impl
-        template<typename, typename>
+        template <typename, typename>
         auto test_implicitly_convertible(...) -> false_type; // intentional no impl
     }
 
-    template<typename From, typename To>
+    template <typename From, typename To>
     struct is_convertible : integral_constant<bool,
         (decltype(detail::test_returnable<To>(0))::value&&
             decltype(detail::test_implicitly_convertible<From, To>(0))::value) ||
         (is_void<From>::value && is_void<To>::value)> 
     {
     };
+
+    template <typename T>
+    struct remove_extent
+    {
+        using type = T;
+    };
+
+    template <typename T>
+    struct remove_extent<T[]>
+    {
+        using type = T;
+    };
+
+    template <typename T, std::size_t N>
+    struct remove_extent<T[N]>
+    {
+        using type = T;
+    };
+
+    template <typename T>
+    using remove_extent_t = typename remove_extent<T>::type;
+
+    template <typename T>
+    struct is_array : false_type
+    {
+    };
+
+    template <typename T>
+    struct is_array<T[]> : true_type
+    {
+    };
+
+    template <typename T, std::size_t N>
+    struct is_array<T[N]> : true_type
+    {
+    };
+
+    template <typename V>
+    inline constexpr bool is_array_v = is_array<V>::value;
 }

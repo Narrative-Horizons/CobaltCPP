@@ -262,7 +262,12 @@ namespace cobalt
 	template <typename T, std::size_t PageSize>
 	T& SparsePool<T, PageSize>::get(const Identifier id) const noexcept
 	{
-		return *tryGet(id);
+		const size_t pg = _page(id);
+		const size_t offset = _offset(id);
+		const Identifier sparseId = _sparse[pg][offset];
+
+		// const cast is required, pointer will not be manipulated, but value at pointer may be
+		return *(const_cast<T*>(_components.data()) + sparseId.index);
 	}
 
 	template <typename T, std::size_t PageSize>
@@ -275,10 +280,11 @@ namespace cobalt
 
 		if (pg < _sparse.size())
 		{
-			Identifier sparseId = _sparse[pg][offset];
+			const Identifier sparseId = _sparse[pg][offset];
 			if (sparseId != Identifier::Invalid)
 			{
-				return _components.data() + sparseId.index;
+				// const cast is required, pointer will not be manipulated, but value at pointer may be
+				result = const_cast<T*>(_components.data()) + sparseId.index;
 			}
 		};
 

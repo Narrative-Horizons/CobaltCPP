@@ -16,7 +16,7 @@ namespace cobalt
 	public:
 		UniquePtr() noexcept;
 		UniquePtr(NullPtr) noexcept;
-		UniquePtr(T* ptr) noexcept;
+		UniquePtr(remove_extent_t<T>* ptr) noexcept;
 		UniquePtr(const UniquePtr&) = delete;
 		UniquePtr(UniquePtr&& ptr) noexcept;
 		~UniquePtr();
@@ -25,50 +25,19 @@ namespace cobalt
 		UniquePtr& operator=(UniquePtr&& ptr) noexcept;
 		UniquePtr& operator=(NullPtr) noexcept;
 
-		T* release();
+		remove_extent_t<T>* release();
 		void reset();
 		void swap(UniquePtr& ptr) noexcept;
 
-		T* get() const noexcept;
+		remove_extent_t<T>* get() const noexcept;
 		operator bool() const noexcept;
 
-		T& operator*() const;
-		T* operator->() const noexcept;
+		remove_extent_t<T>& operator*() const;
+		remove_extent_t<T>* operator->() const noexcept;
 
+		remove_extent_t<T>& operator[](const std::size_t index) const noexcept;
 	private:
-		T* _payload;
-	};
-
-	template <typename T>
-	class UniquePtr<T[]>
-	{
-	public:
-		UniquePtr() noexcept;
-		UniquePtr(NullPtr) noexcept;
-		UniquePtr(T* ptr, std::size_t count) noexcept;
-		UniquePtr(const UniquePtr&) = delete;
-		UniquePtr(UniquePtr&& ptr) noexcept;
-		~UniquePtr();
-
-		UniquePtr& operator=(const UniquePtr&) = delete;
-		UniquePtr& operator=(UniquePtr&& ptr) noexcept;
-		UniquePtr& operator=(NullPtr) noexcept;
-
-		T* release();
-		void reset();
-		void swap(UniquePtr& ptr) noexcept;
-
-		T* get() const noexcept;
-		operator bool() const noexcept;
-
-		T& operator*() const;
-		T* operator->() const noexcept;
-
-		T& operator[](const std::size_t index) const noexcept;
-
-	private:
-		T* _payload;
-		size_t _count;
+		remove_extent_t<T>* _payload;
 	};
 
 	namespace detail
@@ -272,7 +241,7 @@ namespace cobalt
 	}
 
 	template <typename T>
-	UniquePtr<T>::UniquePtr(T* ptr) noexcept
+	UniquePtr<T>::UniquePtr(remove_extent_t<T>* ptr) noexcept
 		: _payload(ptr)
 	{
 	}
@@ -293,7 +262,7 @@ namespace cobalt
 	template <typename T>
 	UniquePtr<T>& UniquePtr<T>::operator=(UniquePtr&& ptr) noexcept
 	{
-		delete _payload;
+		reset();
 		_payload = ptr._payload;
 		ptr._payload = nullptr;
 
@@ -303,13 +272,13 @@ namespace cobalt
 	template <typename T>
 	UniquePtr<T>& UniquePtr<T>::operator=(NullPtr) noexcept
 	{
-		delete _payload;
+		reset();
 		_payload = nullptr;
 		return *this;
 	}
 
 	template <typename T>
-	T* UniquePtr<T>::release()
+	remove_extent_t<T>* UniquePtr<T>::release()
 	{
 		T* result = _payload;
 		_payload = nullptr;
@@ -319,7 +288,14 @@ namespace cobalt
 	template <typename T>
 	void UniquePtr<T>::reset()
 	{
-		delete _payload;
+		if constexpr (is_array_v<T>)
+		{
+			delete[] _payload;
+		}
+		else
+		{
+			delete _payload;
+		}
 		_payload = nullptr;
 	}
 
@@ -332,7 +308,7 @@ namespace cobalt
 	}
 
 	template <typename T>
-	T* UniquePtr<T>::get() const noexcept
+ 	remove_extent_t<T>* UniquePtr<T>::get() const noexcept
 	{
 		return _payload;
 	}
@@ -344,13 +320,13 @@ namespace cobalt
 	}
 
 	template <typename T>
-	T& UniquePtr<T>::operator*() const
+	remove_extent_t<T>& UniquePtr<T>::operator*() const
 	{
 		return *RequireNotNull(_payload);
 	}
 
 	template <typename T>
-	T* UniquePtr<T>::operator->() const noexcept
+	remove_extent_t<T>* UniquePtr<T>::operator->() const noexcept
 	{
 		return _payload;
 	}
@@ -464,119 +440,17 @@ namespace cobalt
 	}
 
 	template<typename T>
-	inline UniquePtr<T[]> MakeUnique(std::size_t count)
+	inline UniquePtr<T> MakeUnique(std::size_t count)
 	{
-		UniquePtr<T[]> value(new T[count], count);
+		using U = remove_extent_t<T>;
+		UniquePtr<T> value(new U[count]);
 		return value;
 	}
 
 	template<typename T>
-	inline UniquePtr<T[]>::UniquePtr() noexcept
-		: UniquePtr(nullptr)
+	inline remove_extent_t<T>& UniquePtr<T>::operator[](const std::size_t index) const noexcept
 	{
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>::UniquePtr(NullPtr) noexcept
-		: UniquePtr(static_cast<T*>(nullptr))
-	{
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>::UniquePtr(T* ptr, std::size_t count) noexcept
-		: _payload(ptr), _count(count)
-	{
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>::UniquePtr(UniquePtr&& ptr) noexcept
-		: _payload(ptr._payload), _count(ptr._count)
-	{
-		ptr._payload = nullptr;
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>::~UniquePtr()
-	{
-		reset();
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>& UniquePtr<T[]>::operator=(UniquePtr&& ptr) noexcept
-	{
-		reset()
-		_payload = ptr._payload;
-		ptr._payload = nullptr;
-		_count = ptr._count;
-
-		return *this;
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>& UniquePtr<T[]>::operator=(NullPtr) noexcept
-	{
-		reset()
-		_payload = nullptr;
-		_count = 0;
-		return *this;
-	}
-
-	template<typename T>
-	inline T* UniquePtr<T[]>::release()
-	{
-		T* result = _payload;
-		_payload = nullptr;
-		_count = 0;
-		return result;
-	}
-
-	template<typename T>
-	inline void UniquePtr<T[]>::reset()
-	{
-		delete[] _payload;
-		_payload = nullptr;
-	}
-
-	template<typename T>
-	inline void UniquePtr<T[]>::swap(UniquePtr& ptr) noexcept
-	{
-		auto tmpPtr = ptr._payload;
-		ptr._payload = _payload;
-		_payload = tmpPtr;
-
-		auto tmpCount = ptr._count;
-		ptr._count = _count;
-		_count = tmpCount;
-	}
-
-	template<typename T>
-	inline T* UniquePtr<T[]>::get() const noexcept
-	{
-		return _payload;
-	}
-
-	template<typename T>
-	inline UniquePtr<T[]>::operator bool() const noexcept
-	{
-		return _payload != nullptr;
-	}
-
-	template<typename T>
-	inline T& UniquePtr<T[]>::operator*() const
-	{
-		return *RequireNotNull(_payload);
-	}
-
-	template<typename T>
-	inline T* UniquePtr<T[]>::operator->() const noexcept
-	{
-		return _payload;
-	}
-
-	template<typename T>
-	inline T& UniquePtr<T[]>::operator[](const std::size_t index) const noexcept
-	{
-		RequireLessThan(index, _count);
+		static_assert(is_array_v<T>);
 		return _payload[index];
 	}
 

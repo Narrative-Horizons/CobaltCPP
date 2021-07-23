@@ -34,11 +34,27 @@ struct CBuffer
 
 int main()
 {
-	Registry reg;
-	for (auto v : reg.view<int>())
-	{
-		
-	}
+	// quick and dirty test for registry
+	COBALT_SCOPE_GUARD({
+		Registry reg;
+		Entity ent = reg.create();
+		reg.assign(ent.id(), 1);
+		for (auto v : reg.entities<int>())
+		{
+			std::cout << reg.get<int>(v.id()) << std::endl;
+		}
+		reg.release(ent.id());
+		for (auto v : reg.entities<int>())
+		{
+			std::cout << reg.get<int>(v.id()) << std::endl;
+		}
+		ent = reg.create();
+		reg.assign(ent.id(), 2);
+		for (auto v : reg.entities<int>())
+		{
+			std::cout << reg.get<int>(v.id()) << std::endl;
+		}
+	})
 
 	WindowCreateInfo createInfo;
 	createInfo.width = 1280;
