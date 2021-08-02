@@ -3,6 +3,8 @@
 #include <cobalt/entities/identifier.hpp>
 #include <cobalt/entities/sparsepool.hpp>
 #include <cobalt/entities/traits.hpp>
+#include <cobalt/events/event.hpp>
+#include <cobalt/events/eventmanager.hpp>
 #include <cobalt/macros.hpp>
 
 #include <cstdint>
@@ -87,7 +89,7 @@ namespace cobalt
 		private:
 			friend class Registry;
 
-			EntityView(Registry* reg) noexcept;
+			explicit EntityView(Registry* reg) noexcept;
 
 			Registry* _reg;
 	};
@@ -143,6 +145,52 @@ namespace cobalt
 
 			template <typename T>
 			SparsePool<T>& _assure();
+
+			EventManager _events;
+	};
+
+	struct EntityCreatedEvent : Event<EntityCreatedEvent>
+	{
+		const Entity entity;
+
+		EntityCreatedEvent() = default;
+		explicit EntityCreatedEvent(const Entity entity);
+	};
+
+	struct EntityDestroyedEvent : Event<EntityDestroyedEvent>
+	{
+		const Entity entity;
+
+		EntityDestroyedEvent() = default;
+		explicit EntityDestroyedEvent(const Entity entity);
+	};
+
+	template <typename Type>
+	struct ComponentAddedEvent : Event<ComponentAddedEvent<Type>>
+	{
+		const Entity entity;
+		const Type& component;
+
+		ComponentAddedEvent(const Entity entity, const Type& component);
+	};
+
+	template <typename Type>
+	struct ComponentRemovedEvent : Event<ComponentRemovedEvent<Type>>
+	{
+		const Entity entity;
+		const Type& component;
+
+		ComponentRemovedEvent(const Entity entity, const Type& component);
+	};
+
+	template <typename Type>
+	struct ComponentReplacedEvent : Event<ComponentAddedEvent<Type>>
+	{
+		const Entity entity;
+		const Type& oldValue;
+		const Type& newValue;
+
+		ComponentReplacedEvent(const Entity entity, const Type& oldValue, const Type& newValue);
 	};
 
 	template <typename T, std::size_t PageSize>
@@ -290,7 +338,8 @@ namespace cobalt
 	inline void Registry::assign(const Identifier id, const T& value)
 	{
 		SparsePool<T>& pool = _assure<T>();
-		pool.assign(id, value);
+		const T& comp = pool.assign(id, value);
+		_events.send<ComponentAddedEvent<T>>(Entity(this, id), comp);
 	}
 
 	template <typename T, typename ... Ts>
@@ -330,6 +379,8 @@ namespace cobalt
 	inline void Registry::remove(const Identifier id) const noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
+		T& value = get<T>(id);
+		_events.send<ComponentRemovedEvent<T>>(Entity(this, id), value);
 		pool.remove(id);
 	}
 
@@ -337,7 +388,15 @@ namespace cobalt
 	inline void Registry::replace(const Identifier id, const T& value) const noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
-		pool.replace(id, value);
+		const std::optional<T> res = pool.replace(id, value);
+		if (res.has_value())
+		{
+			_events.send<ComponentReplacedEvent<T>>(Entity(this, id), res.value(), value);
+		}
+		else
+		{
+			_events.send<ComponentAddedEvent<T>>(Entity(this, id), value);
+		}
 	}
 
 	template <typename T>
@@ -365,6 +424,24 @@ namespace cobalt
 			_memPools[id] = pool;
 		}
 		return *((SparsePool<T>*)pool);
+	}
+
+	template<typename Type>
+	inline ComponentAddedEvent<Type>::ComponentAddedEvent(const Entity entity, const Type& component)
+		: entity(entity), component(component)
+	{
+	}
+
+	template<typename Type>
+	inline ComponentRemovedEvent<Type>::ComponentRemovedEvent(const Entity entity, const Type& component)
+		: entity(entity), component(component)
+	{
+	}
+
+	template<typename Type>
+	inline ComponentReplacedEvent<Type>::ComponentReplacedEvent(const Entity entity, const Type& oldValue, const Type& newValue)
+		: entity(entity), oldValue(oldValue), newValue(newValue)
+	{
 	}
 
 }

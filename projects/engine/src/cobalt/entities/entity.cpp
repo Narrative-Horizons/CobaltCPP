@@ -1,7 +1,7 @@
 #include <cobalt/entities/entity.hpp>
 
 namespace cobalt
-{	
+{
 	Entity::Entity(Registry* registry, Identifier id)
 		: _id(id), _reg(registry)
 	{
@@ -78,7 +78,9 @@ namespace cobalt
 	Entity Registry::create()
 	{
 		const auto id = _nextAvailable == Identifier::Invalid ? _createNewId() : _recycleId();
-		return Entity(this, id);
+		const auto res = Entity(this, id);
+		_events.send<EntityCreatedEvent>(res);
+		return res;
 	}
 
 	void Registry::release(const Identifier id)
@@ -96,6 +98,8 @@ namespace cobalt
 		const auto version = id.version + 1; // on release, increment version
 		_entities[identifier] = Identifier::construct(_nextAvailable.index, version);
 		_nextAvailable = Identifier::construct(identifier, 0);
+
+		_events.send<EntityDestroyedEvent>(Entity(this, id));
 	}
 
 	bool Registry::valid(const Identifier id) const noexcept
@@ -123,4 +127,12 @@ namespace cobalt
 		_entities[id] = Identifier::construct(id, version);
 		return _entities[id];
 	}
+
+	EntityCreatedEvent::EntityCreatedEvent(const Entity entity)
+		: entity(entity)
+	{}
+
+	EntityDestroyedEvent::EntityDestroyedEvent(const Entity entity)
+		: entity(entity)
+	{}
 }
