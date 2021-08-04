@@ -34,6 +34,25 @@ namespace cobalt
 			
 			void invalidate();
 			void release();
+
+			template <typename T>
+			Entity& assign(const T& value);
+
+			template <typename T, typename ... Ts>
+			bool contains() const noexcept;
+
+			template <typename T>
+			T& get() const noexcept;
+
+			template <typename T>
+			T* tryGet() const noexcept;
+
+			template <typename T>
+			Entity& remove();
+
+			template <typename T>
+			Entity& replace(const T& value);
+
 		private:
 			Identifier _id;
 			Registry* _reg;
@@ -442,6 +461,49 @@ namespace cobalt
 	inline ComponentReplacedEvent<Type>::ComponentReplacedEvent(const Entity entity, const Type& oldValue, const Type& newValue)
 		: entity(entity), oldValue(oldValue), newValue(newValue)
 	{
+	}
+
+	template<typename T>
+	inline Entity& Entity::assign(const T& value)
+	{
+		_reg->assign(id(), value);
+		return *this;
+	}
+
+	template<typename T, typename ...Ts>
+	inline bool Entity::contains() const noexcept
+	{
+		if constexpr (sizeof...(Ts) > 0)
+		{
+			return _reg->contains<T, Ts...>(id())
+		}
+		return _reg->contains<T>(id());
+	}
+
+	template<typename T>
+	inline T& Entity::get() const noexcept
+	{
+		return _reg->get<T>(id());
+	}
+
+	template<typename T>
+	inline T* Entity::tryGet() const noexcept
+	{
+		return _reg->tryGet<T>(id());
+	}
+
+	template<typename T>
+	inline Entity& Entity::remove()
+	{
+		_reg->remove<T>(id());
+		return *this;
+	}
+
+	template<typename T>
+	inline Entity& Entity::replace(const T& value)
+	{
+		_reg->replace<T>(id(), value);
+		return *this;
 	}
 
 }
