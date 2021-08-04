@@ -8,6 +8,8 @@ namespace cobalt
 		bool RequireTrueImpl(const bool value);
 	}
 
+	void Require(bool condition);
+
 	template <typename T>
 	T* RequireNotNull(T* ptr)
 	{

@@ -6,6 +6,7 @@
 #include <cobalt/input.hpp>
 
 #include <cobalt/entities/entity.hpp>
+#include <cobalt/events/eventmanager.hpp>
 
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
@@ -36,7 +37,20 @@ int main()
 {
 	// quick and dirty test for registry
 	COBALT_SCOPE_GUARD({
+		struct DummyReceiver : public Receiver<EntityCreatedEvent>
+		{
+			DummyReceiver() = default;
+			void onReceive(const EntityCreatedEvent& e)
+			{
+				std::cout << "Test" << std::endl;
+			}
+		};
+		DummyReceiver dummyReceiver;
+
 		Registry reg;
+
+		reg.events().subscribe<EntityCreatedEvent>(&dummyReceiver);
+
 		Entity ent = reg.create();
 		reg.assign(ent.id(), 1);
 		for (auto v : reg.entities<int>())

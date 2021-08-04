@@ -108,6 +108,11 @@ namespace cobalt
 		return idx < _entities.size() && _entities[idx] == id;
 	}
 
+	EventManager& Registry::events() noexcept
+	{
+		return _events;
+	}
+
 	Identifier Registry::_createNewId()
 	{
 		// Add a new entity

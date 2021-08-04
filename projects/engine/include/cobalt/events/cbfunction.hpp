@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cobalt/assertions.hpp>
 #include <cobalt/macros.hpp>
 #include <cobalt/containers/smartpointers.hpp>
 
@@ -34,6 +35,7 @@ namespace cobalt
 			class ICallable
 			{
 				public:
+					ICallable() = default;
 					virtual ~ICallable() = default;
 					virtual ReturnType invoke(ArgumentTypes ... args) = 0;
 
@@ -45,7 +47,9 @@ namespace cobalt
 			{
 				public:
 					Callable(const Type& type)
-						: _type(type) { }
+						: _type(type)
+					{
+					}
 
 					~Callable() override = default;
 
@@ -119,7 +123,7 @@ namespace cobalt
 	ReturnType CbFunction<ReturnType(ArgumentTypes...)>::operator()(ArgumentTypes ...args)
 	{
 #if defined(_DEBUG)
-		assert(_func);
+		Require(_func.get() != nullptr);
 #endif
 		return _func->invoke(args...);
 	}
@@ -128,6 +132,6 @@ namespace cobalt
 	template<typename T>
 	CbFunction<ReturnType(ArgumentTypes...)>::CbFunction(T t)
 	{
-		_func = MakeShared<Callable<T>>(t);
+		_func = SharedPtr<ICallable>((ICallable*)new Callable<T>(t));
 	}
 }

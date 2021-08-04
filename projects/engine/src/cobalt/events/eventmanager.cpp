@@ -96,7 +96,7 @@ namespace cobalt
 	void EventManager::_subscribe(AReceiver* receiver, IEventCallback* cb, size_t id)
 	{
 		auto eventHandlers = _callbacks.find(id);
-		if (eventHandlers != _callbacks.end())
+		if (eventHandlers == _callbacks.end())
 		{
 			std::vector<std::pair<AReceiver*, IEventCallback*>> cbs;
 			cbs.emplace_back(receiver, cb);

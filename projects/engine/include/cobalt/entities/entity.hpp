@@ -147,6 +147,8 @@ namespace cobalt
 
 			template <typename ... Ts>
 			EntityView<Ts...> entities() noexcept;
+
+			EventManager& events() noexcept;
 			
 		private:
 			template <typename ... Ts>

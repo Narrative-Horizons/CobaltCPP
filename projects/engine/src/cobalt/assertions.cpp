@@ -16,4 +16,9 @@ namespace cobalt
 		return value;
 	}
 
+	void Require(bool condition)
+	{
+		detail::RequireTrueImpl(condition);
+	}
+
 }
