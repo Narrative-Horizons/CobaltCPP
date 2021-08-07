@@ -36,6 +36,11 @@ workspace("Cobalt")
     Dependencies["imgui"] = {
         include = "%{sln.location}/dependencies/diligent/include/DiligentTools/ThirdParty/imgui"
     }
+    Dependencies["PhysX"] = {
+        bin = "%{sln.location}/dependencies/physx@4.1.2/bin/%{cfg.buildcfg}/%{cfg.system}",
+        include = "%{sln.location}/dependencies/physx@4.1.2/include",
+        lib = "%{sln.location}/dependencies/physx@4.1.2/lib/%{cfg.buildcfg}/%{cfg.system}"
+    }
 
     Projects = {}
     Projects["engine"] = {

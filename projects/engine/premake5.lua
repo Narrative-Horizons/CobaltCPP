@@ -14,17 +14,20 @@ project("Engine")
 
     includedirs({
         "%{Dependencies.diligent.include}",
+        "%{Dependencies.PhysX.include}",
         "%{Projects.engine.include}",
         "%{NativeIncludeDirs.glfw}",
         "src" -- private headers
     })
 
     libdirs({
-        "%{Dependencies.diligent.lib}"
+        "%{Dependencies.diligent.lib}",
+        "%{Dependencies.PhysX.lib}"
     })
 
     postbuildcommands {
-        "{COPY} %{Dependencies.diligent.bin} %{binaries}"
+        "{COPY} %{Dependencies.diligent.bin} %{binaries}",
+        "{COPY} %{Dependencies.PhysX.bin} %{binaries}"
     }
 
     links({
@@ -40,6 +43,8 @@ project("Engine")
         symbols("On")
 
     filter("system:Windows")
+
+        staticruntime("Off")
 
         linkoptions({
             "/IGNORE:4006",
@@ -67,6 +72,16 @@ project("Engine")
             "SPIRV-Tools-opt.lib",
             "SPIRV-Tools.lib",
             "Diligent-GraphicsTools.lib",
+
+            "PhysX_64.lib",
+            "PhysXCharacterKinematic_static_64.lib",
+            "PhysXCommon_64.lib",
+            "PhysXCooking_64.lib",
+            "PhysXExtensions_static_64.lib",
+            "PhysXFoundation_64.lib",
+            "PhysXPvdSDK_static_64.lib",
+            "PhysXTask_static_64.lib",
+            "PhysXVehicle_static_64.lib"
         })
 
     filter({"system:Windows", "Debug"})

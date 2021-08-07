@@ -25,6 +25,7 @@ project("Entrypoint")
     })
 
     filter("system:Windows")
+        staticruntime("Off")
 
         linkoptions({
             "/IGNORE:4099"
