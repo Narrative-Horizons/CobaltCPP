@@ -13,16 +13,25 @@ workspace("Cobalt")
 
     group "External Dependencies"
     include "dependencies/GLFW@3.3.3"
+    include "dependencies/googletest@1.11.0/googlemock"
+    include "dependencies/googletest@1.11.0/googletest"
     group ""
 
     include("projects/engine")
     include("projects/entrypoint")
+    include("projects/tests")
 
     Dependencies = {}
     Dependencies["diligent"] = {
         bin = "%{sln.location}/dependencies/diligent/bin/%{cfg.buildcfg}/%{cfg.system}",
         include = "%{sln.location}/dependencies/diligent/include",
         lib = "%{sln.location}/dependencies/diligent/lib/%{cfg.buildcfg}/%{cfg.system}"
+    }
+    Dependencies["googlemock"] = {
+        include = "%{sln.location}/dependencies/googletest@1.11.0/googlemock/include"
+    }
+    Dependencies["googletest"] = {
+        include = "%{sln.location}/dependencies/googletest@1.11.0/googletest/include"
     }
     Dependencies["imgui"] = {
         include = "%{sln.location}/dependencies/diligent/include/DiligentTools/ThirdParty/imgui"
