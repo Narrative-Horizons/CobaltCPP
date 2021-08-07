@@ -32,3 +32,14 @@ using _UNDERLYING_ENUM_T = typename std::underlying_type<EnumType>::type;
         }
 
 #define COBALT_SCOPE_GUARD(content) { content }
+
+#define ENTRYPOINT(application) \
+    int main(int argc, char** argv) \
+    { \
+        static_assert(std::is_base_of_v<cobalt::BaseApplication, application>); \
+        cobalt::UniquePtr<application> app = cobalt::MakeUnique<application>(); \
+        cobalt::Engine<application>::initialize(cobalt::move(app)); \
+        cobalt::Engine<application>::instance().run(); \
+        cobalt::Engine<application>::destruct(); \
+        return 0; \
+    }
