@@ -33,7 +33,15 @@ project("Entrypoint")
         })
 
     filter("Debug")
+        defines({
+            "_DEBUG"
+        })
         symbols("On")
+
+    filter("Release")
+        defines({
+            "NDEBUG"
+        })
 
     postbuildcommands({
 

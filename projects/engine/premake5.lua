@@ -37,10 +37,16 @@ project("Engine")
     filter("Debug")
         defines({
             "DILIGENT_DEBUG",
-            "DEBUG"
+            "DEBUG",
+            "_DEBUG"
         })
 
         symbols("On")
+    
+    filter("Release")
+        defines({
+            "NDEBUG"
+        })
 
     filter("system:Windows")
 
