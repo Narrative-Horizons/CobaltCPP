@@ -16,6 +16,7 @@ project("Entrypoint")
     includedirs({
         "%{Projects.engine.include}",
         "%{Projects.entrypoint.include}",
+        "%{Dependencies.PhysX.include}",
         "%{NativeIncludeDirs.glfw}",
         "%{Dependencies.imgui.include}",
     })

@@ -1,10 +1,14 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
 #include <cobalt/containers/smartpointers.hpp>
 #include <cobalt/window.hpp>
 #include <cobalt/graphics/graphicscontext.hpp>
+#include <cobalt/physics/physics.hpp>
+
+#include <PxPhysicsAPI.h>
 
 namespace cobalt
 {
@@ -33,6 +37,8 @@ namespace cobalt
 
 			void run()
 			{
+				_physics = MakeUnique<Physics>();
+
 				_app->initialize();
 
 				while (!_window->shouldClose())
@@ -60,6 +66,11 @@ namespace cobalt
 				return _context;
 			}
 
+			UniquePtr<Physics>& getPhysics()
+			{
+				return _physics;
+			}
+
 		private:
 			Engine(UniquePtr<Application>&& app);
 
@@ -67,6 +78,8 @@ namespace cobalt
 
 			UniquePtr<Window> _window;
 			UniquePtr<GraphicsContext> _context;
+
+			UniquePtr<Physics> _physics;
 
 			static Engine<Application>* _instance;
 	};
