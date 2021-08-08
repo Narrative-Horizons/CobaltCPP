@@ -7,32 +7,32 @@ namespace cobalt
 	{
 	}
 
-	bool Entity::operator==(const Entity& rhs) noexcept
+	bool Entity::operator==(const Entity& rhs) const noexcept
 	{
 		return _id == rhs._id && _reg == rhs._reg;
 	}
 
-	bool Entity::operator!=(const Entity& rhs) noexcept
+	bool Entity::operator!=(const Entity& rhs) const noexcept
 	{
 		return _id != rhs._id || _reg != rhs._reg;
 	}
 
-	bool Entity::operator<(const Entity& rhs) noexcept
+	bool Entity::operator<(const Entity& rhs) const noexcept
 	{
 		return _id < rhs._id;
 	}
 
-	bool Entity::operator<=(const Entity& rhs) noexcept
+	bool Entity::operator<=(const Entity& rhs) const noexcept
 	{
 		return _id <= rhs._id;
 	}
 
-	bool Entity::operator>(const Entity& rhs) noexcept
+	bool Entity::operator>(const Entity& rhs) const noexcept
 	{
 		return _id > rhs._id;
 	}
 
-	bool Entity::operator>=(const Entity& rhs) noexcept
+	bool Entity::operator>=(const Entity& rhs) const noexcept
 	{
 		return _id >= rhs._id;
 	}
@@ -49,7 +49,7 @@ namespace cobalt
 
 	bool Entity::valid() const noexcept
 	{
-		return _reg->valid(_id);
+		return _reg && _reg->valid(_id);
 	}
 	
 	void Entity::invalidate()
@@ -79,6 +79,7 @@ namespace cobalt
 	{
 		const auto id = _nextAvailable == Identifier::Invalid ? _createNewId() : _recycleId();
 		const auto res = Entity(this, id);
+		++_alive;
 		_events.send<EntityCreatedEvent>(res);
 		return res;
 	}
@@ -99,6 +100,7 @@ namespace cobalt
 		_entities[identifier] = Identifier::construct(_nextAvailable.index, version);
 		_nextAvailable = Identifier::construct(identifier, 0);
 
+		--_alive;
 		_events.send<EntityDestroyedEvent>(Entity(this, id));
 	}
 
@@ -111,6 +113,16 @@ namespace cobalt
 	EventManager& Registry::events() noexcept
 	{
 		return _events;
+	}
+
+	std::size_t Registry::alive() const noexcept
+	{
+		return _alive;
+	}
+
+	std::size_t Registry::capacity() const noexcept
+	{
+		return _entities.size();
 	}
 
 	Identifier Registry::_createNewId()

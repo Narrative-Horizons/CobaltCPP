@@ -6,6 +6,7 @@
 .vs/
 .vscode/
 *.sln
+*.sln.DotSettings.user
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user

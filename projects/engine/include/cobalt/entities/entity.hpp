@@ -21,12 +21,12 @@ namespace cobalt
 			Entity() = default;
 			Entity(Registry* registry, Identifier id);
 			
-			bool operator==(const Entity& rhs) noexcept;
-			bool operator!=(const Entity& rhs) noexcept;
-			bool operator<(const Entity& rhs) noexcept;
-			bool operator<=(const Entity& rhs) noexcept;
-			bool operator>(const Entity& rhs) noexcept;
-			bool operator>=(const Entity& rhs) noexcept;
+			bool operator==(const Entity& rhs) const noexcept;
+			bool operator!=(const Entity& rhs) const noexcept;
+			bool operator<(const Entity& rhs) const noexcept;
+			bool operator<=(const Entity& rhs) const noexcept;
+			bool operator>(const Entity& rhs) const noexcept;
+			bool operator>=(const Entity& rhs) const noexcept;
 
 			operator bool() const noexcept;
 			Identifier id() const noexcept;
@@ -54,8 +54,8 @@ namespace cobalt
 			Entity& replace(const T& value);
 
 		private:
-			Identifier _id;
-			Registry* _reg;
+			Identifier _id = Identifier::Invalid;
+			Registry* _reg = nullptr; // non-owning pointer
 	};
 
 	template <typename T, std::size_t PageSize>
@@ -137,10 +137,10 @@ namespace cobalt
 			T* tryGet(const Identifier id) const noexcept;
 
 			template <typename T>
-			void remove(const Identifier id) const noexcept;
+			void remove(const Identifier id) noexcept;
 
 			template <typename T>
-			void replace(const Identifier id, const T& value) const noexcept;
+			void replace(const Identifier id, const T& value) noexcept;
 
 			template <typename T>
 			ComponentView<T, traits<T>::poolSize()> view() noexcept;
@@ -149,6 +149,9 @@ namespace cobalt
 			EntityView<Ts...> entities() noexcept;
 
 			EventManager& events() noexcept;
+
+			std::size_t alive() const noexcept;
+			std::size_t capacity() const noexcept;
 			
 		private:
 			template <typename ... Ts>
@@ -168,6 +171,8 @@ namespace cobalt
 			SparsePool<T>& _assure();
 
 			EventManager _events;
+
+			std::size_t _alive = 0;
 	};
 
 	struct EntityCreatedEvent : Event<EntityCreatedEvent>
@@ -366,7 +371,7 @@ namespace cobalt
 	template <typename T, typename ... Ts>
 	inline bool Registry::contains(const Identifier id) const noexcept
 	{
-		static T family = traits<T>::identifier();
+		static auto family = traits<T>::identifier();
 		constexpr size_t poolSize = traits<T>::poolSize();
 		const bool res = _memPools.size() > family && _memPools[family] != nullptr ? ((SparsePool<T, poolSize>*) _memPools[family])->contains(id) : false;
 		if constexpr (sizeof...(Ts) > 0)
@@ -382,7 +387,7 @@ namespace cobalt
 	template <typename T>
 	T& Registry::get(const Identifier id) const noexcept
 	{
-		static T family = traits<T>::identifier();
+		static auto family = traits<T>::identifier();
 		constexpr size_t poolSize = traits<T>::poolSize();
 		return ((SparsePool<T, poolSize>*) _memPools[family])->get(id);
 	}
@@ -390,14 +395,14 @@ namespace cobalt
 	template <typename T>
 	T* Registry::tryGet(const Identifier id) const noexcept
 	{
-		static T family = traits<T>::identifier();
+		static auto family = traits<T>::identifier();
 		constexpr size_t poolSize = traits<T>::poolSize();
 		const auto res = _memPools.size() > family && _memPools[family] != nullptr ? ((SparsePool<T, poolSize>*) _memPools[family])->tryGet(id) : nullptr;
 		return res;
 	}
 
 	template <typename T>
-	inline void Registry::remove(const Identifier id) const noexcept
+	inline void Registry::remove(const Identifier id) noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
 		T& value = get<T>(id);
@@ -406,17 +411,13 @@ namespace cobalt
 	}
 
 	template <typename T>
-	inline void Registry::replace(const Identifier id, const T& value) const noexcept
+	inline void Registry::replace(const Identifier id, const T& value) noexcept
 	{
 		SparsePool<T>& pool = _assure<T>();
 		const std::optional<T> res = pool.replace(id, value);
 		if (res.has_value())
 		{
 			_events.send<ComponentReplacedEvent<T>>(Entity(this, id), res.value(), value);
-		}
-		else
-		{
-			_events.send<ComponentAddedEvent<T>>(Entity(this, id), value);
 		}
 	}
 
@@ -477,7 +478,7 @@ namespace cobalt
 	{
 		if constexpr (sizeof...(Ts) > 0)
 		{
-			return _reg->contains<T, Ts...>(id())
+			return _reg->contains<T, Ts...>(id());
 		}
 		return _reg->contains<T>(id());
 	}
