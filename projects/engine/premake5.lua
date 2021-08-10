@@ -42,7 +42,7 @@ project("Engine")
         })
 
         symbols("On")
-    
+
     filter("Release")
         defines({
             "NDEBUG"

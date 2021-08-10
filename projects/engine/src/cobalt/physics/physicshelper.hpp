@@ -14,21 +14,41 @@ namespace cobalt
 		physx::PxPvdTransport* transport;
 		physx::PxPhysics* physics;
 		physx::PxCooking* cooking;
+		physx::PxCudaContextManager* cudaContext;
+		physx::PxDefaultCpuDispatcher* cpuDispatcher;
+		physx::PxSimulationFilterShader* simulationFilterShader;
+		physx::PxScene* scene;
 
 		~PhysicsImpl()
 		{
-			cooking->release();
-			cooking = nullptr;
-
-			transport->release();
-			transport = nullptr;
-
+			scene->release();
+			scene = nullptr;
+			
+			cpuDispatcher->release();
+			cpuDispatcher = nullptr;
+			
+#if defined(PX_SUPPORT_GPU_PHYSX) && defined(_WIN32)
+			if (cudaContext != nullptr)
+			{
+				cudaContext->release();
+				cudaContext = nullptr;
+			}
+#endif
+			
 			physics->release();
 			physics = nullptr;
 
-			pvd->disconnect();
+			delete simulationFilterShader;
+			simulationFilterShader = nullptr;
+			
+			cooking->release();
+			cooking = nullptr;
+
 			pvd->release();
 			pvd = nullptr;
+
+			transport->release();
+			transport = nullptr;
 
 			foundation->release();
 			foundation = nullptr;
