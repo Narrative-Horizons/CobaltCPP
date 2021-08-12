@@ -15,7 +15,7 @@ namespace cobalt
 		uint32_t sourceIndex;
 	};
 	
-	ScreenResolvePass::ScreenResolvePass(const GraphicsContext& context) : RenderPass(context, "ScreenResolvePass")
+	ScreenResolvePass::ScreenResolvePass(GraphicsContext& context) : RenderPass(context, "ScreenResolvePass")
 	{
 		_impl = new ScreenResolvePassImpl();
 		

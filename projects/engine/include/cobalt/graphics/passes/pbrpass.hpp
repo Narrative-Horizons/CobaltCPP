@@ -7,7 +7,7 @@ namespace cobalt
 	class PBRPass : public RenderPass
 	{
 		public:
-			PBRPass(const GraphicsContext& context);
+			PBRPass(GraphicsContext& context);
 			~PBRPass() override;
 
 			void render(FrameInfo frameInfo) override;

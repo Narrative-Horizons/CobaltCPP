@@ -2,7 +2,6 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/Buffer.h>
 
 #include <cobalt/graphics/graphicscontext.hpp>
-#include <cobalt/graphics/graphicscontexthelper.hpp>
 #include <cobalt/graphics/vertexbufferhelper.hpp>
 
 namespace cobalt
@@ -21,8 +20,7 @@ namespace cobalt
 		bufferData.pData = data;
 		bufferData.DataSize = static_cast<uint32_t>(size);
 
-		const GraphicsContextHelper contextHelper(context);
-		contextHelper.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_impl->buffer);
+		context.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_impl->buffer);
 	}
 
 	VertexBuffer::~VertexBuffer()

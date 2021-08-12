@@ -1,24 +1,15 @@
 #include <cobalt/graphics/framebuffer.hpp>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/Texture.h>
 
-#include <cobalt/graphics/framebufferhelper.hpp>
-#include <cobalt/graphics/graphicscontexthelper.hpp>
 #include <cobalt/graphics/graphicscontext.hpp>
 
 namespace cobalt
 {
 	Framebuffer::Framebuffer(const GraphicsContext& context, const FramebufferCreateInfo& createInfo) : _context(context)
 	{
-		_impl = new FramebufferImpl();
 		_createInfo = createInfo;
 
 		resize(createInfo.width, createInfo.height);
-	}
-
-	Framebuffer::~Framebuffer()
-	{
-		delete _impl;
-		_impl = nullptr;
 	}
 
 	FramebufferCreateInfo Framebuffer::getInfo() const
@@ -31,8 +22,6 @@ namespace cobalt
 		_createInfo.width = width;
 		_createInfo.height = height;
 
-		const GraphicsContextHelper contextHelper(_context);
-		
 		for (const TextureFormat& format : _createInfo.renderTargets)
 		{
 			Diligent::TextureDesc desc;
@@ -45,8 +34,8 @@ namespace cobalt
 
 			Diligent::RefCntAutoPtr<Diligent::ITexture> tex;
 
-			contextHelper.getRenderDevice()->CreateTexture(desc, nullptr, &tex);
-			_impl->renderTargets.push_back(tex);
+			_context.getRenderDevice()->CreateTexture(desc, nullptr, &tex);
+			_renderTargets.push_back(tex);
 		}
 
 		if (_createInfo.depthTarget != TextureFormat::UNKNOWN)
@@ -58,8 +47,23 @@ namespace cobalt
 			desc.Height = _createInfo.height;
 			desc.Type = Diligent::RESOURCE_DIM_TEX_2D;
 			
-			contextHelper.getRenderDevice()->CreateTexture(desc, nullptr, &_impl->depthTarget);
+			_context.getRenderDevice()->CreateTexture(desc, nullptr, &_depthTarget);
 		}
+	}
+
+	Diligent::ITexture** Framebuffer::getRenderTargets()
+	{
+		return &_renderTargets[0];
+	}
+
+	Diligent::ITextureView* Framebuffer::getRenderTarget(const uint32_t index, TextureTypeView viewType)
+	{
+		return _renderTargets[index]->GetDefaultView(static_cast<Diligent::TEXTURE_VIEW_TYPE>(viewType));
+	}
+
+	Diligent::ITextureView* Framebuffer::getDepthTarget(TextureTypeView viewType)
+	{
+		return _depthTarget->GetDefaultView(static_cast<Diligent::TEXTURE_VIEW_TYPE>(viewType));
 	}
 }
 

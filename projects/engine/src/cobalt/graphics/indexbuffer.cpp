@@ -2,15 +2,11 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/Buffer.h>
 
 #include <cobalt/graphics/graphicscontext.hpp>
-#include <cobalt/graphics/graphicscontexthelper.hpp>
-#include <cobalt/graphics/indexbufferhelper.hpp>
 
 namespace cobalt
 {
 	IndexBuffer::IndexBuffer(const GraphicsContext& context, const void* data, const size_t size)
 	{
-		_impl = new IndexBufferImpl();
-
 		Diligent::BufferDesc bufferDesc;
 		bufferDesc.Name = "Index Buffer";
 		bufferDesc.Usage = Diligent::USAGE_IMMUTABLE;
@@ -21,13 +17,11 @@ namespace cobalt
 		bufferData.pData = data;
 		bufferData.DataSize = static_cast<uint32_t>(size);
 
-		const GraphicsContextHelper contextHelper(context);
-		contextHelper.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_impl->buffer);
+		context.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_buffer);
 	}
 
-	IndexBuffer::~IndexBuffer()
+	Diligent::RefCntAutoPtr<Diligent::IBuffer> IndexBuffer::getBuffer() const
 	{
-		delete _impl;
-		_impl = nullptr;
+		return _buffer;
 	}
 }

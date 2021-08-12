@@ -17,13 +17,13 @@ namespace cobalt
 	class RenderPass
 	{
 		public:
-			RenderPass(const GraphicsContext& context, const std::string& name);
+			RenderPass(GraphicsContext& context, const std::string& name);
 			virtual ~RenderPass() = default;
 
 			virtual void render(FrameInfo frameInfo) = 0;
 
 		protected:
-			const GraphicsContext& _context;
+			GraphicsContext& _context;
 			std::string _name;
 	};
 }

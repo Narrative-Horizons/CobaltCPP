@@ -10,7 +10,7 @@ namespace cobalt
 		UniquePtr<Shader> pbrTranslucentShader;
 	};
 	
-	PBRPass::PBRPass(const GraphicsContext& context) : RenderPass(context, "PBR")
+	PBRPass::PBRPass(GraphicsContext& context) : RenderPass(context, "PBR")
 	{
 		_impl = new PBRPassImpl();
 
@@ -57,7 +57,7 @@ namespace cobalt
 	void PBRPass::render(const FrameInfo frameInfo)
 	{
 		const UniquePtr<Framebuffer>& renderTo = frameInfo.frameBuffer;
-
+		
 		_context.setRenderTarget(renderTo, ResourceStateTransitionMode::TRANSITION);
 
 		const float clearColor[] = { 0, 0, 0, 0 };

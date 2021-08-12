@@ -9,8 +9,6 @@ namespace cobalt
 			~Physics();
 
 		private:
-			friend class PhysicsHelper;
-
 			struct PhysicsImpl;
 			PhysicsImpl* _impl;
 	};

@@ -1,4 +1,8 @@
 #pragma once
+#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
+#include <DiligentCore/Graphics/GraphicsEngine/interface/Buffer.h>
+
+#include "cobalt/macros.hpp"
 
 namespace cobalt
 {
@@ -7,12 +11,11 @@ namespace cobalt
 	{
 		public:
 			IndexBuffer(const GraphicsContext& context, const void* data, const size_t size);
-			~IndexBuffer();
+			~IndexBuffer() = default;
+
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IBuffer> getBuffer() const;
 
 		private:
-			friend class IndexBufferHelper;
-
-			struct IndexBufferImpl;
-			IndexBufferImpl* _impl;
+			Diligent::RefCntAutoPtr<Diligent::IBuffer> _buffer;
 	};
 }

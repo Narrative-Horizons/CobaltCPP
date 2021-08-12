@@ -4,11 +4,13 @@
 #include <vector>
 
 #include <cobalt/graphics/graphicsenums.hpp>
+#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
+#include <DiligentCore/Graphics/GraphicsEngine/interface/Texture.h>
 
 namespace cobalt
 {
 	class GraphicsContext;
-	
+
 	struct FramebufferCreateInfo
 	{
 		uint32_t framesInFlight;
@@ -24,20 +26,21 @@ namespace cobalt
 	{
 		public:
 			explicit Framebuffer(const GraphicsContext& context, const FramebufferCreateInfo& createInfo);
-			~Framebuffer();
 
 			COBALT_NO_DISCARD FramebufferCreateInfo getInfo() const;
+
+			COBALT_NO_DISCARD Diligent::ITexture** getRenderTargets();
+			COBALT_NO_DISCARD Diligent::ITextureView* getRenderTarget(uint32_t index, TextureTypeView viewType);
+			COBALT_NO_DISCARD Diligent::ITextureView* getDepthTarget(TextureTypeView viewType);
 
 			void resize(uint32_t width, uint32_t height);
 
 		private:
-			friend class FramebufferHelper;
-
-			struct FramebufferImpl;
-			FramebufferImpl* _impl;
-
 			FramebufferCreateInfo _createInfo;
 
 			const GraphicsContext& _context;
+
+			std::vector<Diligent::RefCntAutoPtr<Diligent::ITexture>> _renderTargets;
+			Diligent::RefCntAutoPtr<Diligent::ITexture> _depthTarget;
 	};
 }

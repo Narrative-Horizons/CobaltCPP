@@ -11,14 +11,18 @@ namespace cobalt
 	class ShaderResource
 	{
 		public:
-			ShaderResource();
-			~ShaderResource();
+			ShaderResource() = default;
+			~ShaderResource() = default;
+
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IDeviceObject> getResourceObject() const;
+			//COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IDeviceObject*> getResourceObjects() const;
+			COBALT_NO_DISCARD uint32_t getResourceObjectsCount() const;
 
 		protected:
-			friend class ShaderResourceHelper;
+			Diligent::RefCntAutoPtr<Diligent::IDeviceObject> _objectData;
+			//Diligent::RefCntAutoPtr<Diligent::IDeviceObject*> arrayData;
 
-			struct ShaderResourceImpl;
-			ShaderResourceImpl* _impl;
+			uint32_t _numElements = 1;
 	};
 	
 	struct ShaderResourceDesc
@@ -71,18 +75,28 @@ namespace cobalt
 	{
 		public:
 			Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo);
-			~Shader();
+			~Shader() = default;
 
 			COBALT_NO_COPY_MOVE(Shader)
 
-			void setData(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data) const;
-			void setDataArray(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data) const;
-			void setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, const Framebuffer& framebuffer, uint32_t index) const;
+			void setData(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data);
+			void setDataArray(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name, ShaderResource& data);
+			void setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, Framebuffer& framebuffer, uint32_t index);
+
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IPipelineState> getPipeline() const;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShader> getVertexShader() const;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShader> getPixelShader() const;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShader> getComputeShader() const;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> getResourceBinding() const;
 
 		private:
-			friend class ShaderHelper;
-		
-			struct ShaderImpl;
-			ShaderImpl* _impl;
+			Diligent::PIPELINE_TYPE _type;
+			Diligent::RefCntAutoPtr<Diligent::IPipelineState> _pipeline;
+			Diligent::RefCntAutoPtr<Diligent::IShader> _vShader;
+			Diligent::RefCntAutoPtr<Diligent::IShader> _pShader;
+			Diligent::RefCntAutoPtr<Diligent::IShader> _cShader;
+			Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> _srb;
+			std::vector<Diligent::ShaderResourceVariableDesc> _vars;
+			std::vector<Diligent::ImmutableSamplerDesc> _samplers;
 	};
 }

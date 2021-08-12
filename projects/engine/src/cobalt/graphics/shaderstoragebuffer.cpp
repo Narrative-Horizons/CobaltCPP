@@ -1,9 +1,6 @@
 #include <cobalt/graphics/shaderstoragebuffer.hpp>
 
 #include <DiligentCore/Graphics/GraphicsTools/interface/MapHelper.hpp>
-#include <cobalt/graphics/graphicscontexthelper.hpp>
-
-#include "shaderhelper.hpp"
 
 namespace cobalt
 {
@@ -23,7 +20,6 @@ namespace cobalt
 	{
 		_uimpl = new ShaderStorageBufferImpl(context);
 		_uimpl->size = size;
-		const GraphicsContextHelper contextHelper(context);
 
 		Diligent::BufferDesc ubDesc;
 		ubDesc.Name = name.c_str();
@@ -34,27 +30,23 @@ namespace cobalt
 		ubDesc.ElementByteStride = static_cast<uint32_t>(size);
 		ubDesc.CPUAccessFlags = Diligent::CPU_ACCESS_WRITE;
 
-		contextHelper.getRenderDevice()->CreateBuffer(ubDesc, nullptr, &_uimpl->buffer);
+		context.getRenderDevice()->CreateBuffer(ubDesc, nullptr, &_uimpl->buffer);
 
-		_impl->objectData = _uimpl->buffer->GetDefaultView(Diligent::BUFFER_VIEW_SHADER_RESOURCE);
+		_objectData = _uimpl->buffer->GetDefaultView(Diligent::BUFFER_VIEW_SHADER_RESOURCE);
 	}
 
 	ShaderStorageBuffer::~ShaderStorageBuffer()
 	{
 		delete _uimpl;
 		_uimpl = nullptr;
-
-		delete _impl;
-		_impl = nullptr;
 	}
 
 	void ShaderStorageBuffer::setData(const void* data, ResourceStateTransitionMode transitionMode) const
 	{
-		const GraphicsContextHelper contextHelper(_uimpl->context);
 		void* mappedData = nullptr;
-		contextHelper.getImmediateContext()->MapBuffer(_uimpl->buffer, Diligent::MAP_WRITE, Diligent::MAP_FLAG_DISCARD, mappedData);
+		_uimpl->context.getImmediateContext()->MapBuffer(_uimpl->buffer, Diligent::MAP_WRITE, Diligent::MAP_FLAG_DISCARD, mappedData);
 		memcpy(mappedData, data, _uimpl->size);
-		contextHelper.getImmediateContext()->UnmapBuffer(_uimpl->buffer, Diligent::MAP_WRITE);
+		_uimpl->context.getImmediateContext()->UnmapBuffer(_uimpl->buffer, Diligent::MAP_WRITE);
 
 		/*contextHelper.getImmediateContext()->UpdateBuffer(_uimpl->buffer, 0, static_cast<uint32_t>(_uimpl->size), data,
 			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));*/

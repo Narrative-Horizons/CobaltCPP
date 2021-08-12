@@ -14,6 +14,7 @@ project("Entrypoint")
     })
 
     includedirs({
+        "%{Dependencies.diligent.include}",
         "%{Projects.engine.include}",
         "%{Projects.entrypoint.include}",
         "%{Dependencies.PhysX.include}",
@@ -30,6 +31,10 @@ project("Entrypoint")
 
         linkoptions({
             "/IGNORE:4099"
+        })
+
+        defines({
+            "PLATFORM_WIN32",
         })
 
     filter("Debug")

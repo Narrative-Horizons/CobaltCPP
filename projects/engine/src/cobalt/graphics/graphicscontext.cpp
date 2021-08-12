@@ -7,11 +7,7 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
 #include <DiligentTools/Imgui/interface/ImGuiDiligentRenderer.hpp>
 
-#include "graphicscontexthelper.hpp"
-#include "framebufferhelper.hpp"
-#include "shaderhelper.hpp"
 #include "vertexbufferhelper.hpp"
-#include "indexbufferhelper.hpp"
 
 #include <cobalt/graphics/shader.hpp>
 #include <cobalt/input.hpp>
@@ -22,10 +18,9 @@ namespace cobalt
 	{
 		using namespace Diligent;
 
-		_impl = new GraphicsContextImpl();
-		_impl->window = &window;
-		
 		SwapChainDesc scDesc;
+
+		_window = &window;
 
 		switch (createInfo.api)
 		{
@@ -34,17 +29,17 @@ namespace cobalt
 				GetEngineFactoryVkType getEngineFactoryVk = LoadGraphicsEngineVk();
 				EngineVkCreateInfo engineCi;
 
-				_impl->deviceType = RENDER_DEVICE_TYPE_VULKAN;
+				_deviceType = RENDER_DEVICE_TYPE_VULKAN;
 
 				IEngineFactoryVk* pFactoryVk = getEngineFactoryVk();
-				pFactoryVk->CreateDeviceAndContextsVk(engineCi, &_impl->device, &_impl->immediateContext);
+				pFactoryVk->CreateDeviceAndContextsVk(engineCi, &_device, &_immediateContext);
 
 #if defined(PLATFORM_WIN32)
 				HWND hWnd = static_cast<HWND>(window.getNativeWindow());
-				if (!_impl->swapChain && hWnd != nullptr)
+				if (!_swapChain && hWnd != nullptr)
 				{
 					Win32NativeWindow nativeWindow { hWnd };
-					pFactoryVk->CreateSwapChainVk(_impl->device, _impl->immediateContext, scDesc, nativeWindow, &_impl->swapChain);
+					pFactoryVk->CreateSwapChainVk(_device, _immediateContext, scDesc, nativeWindow, &_swapChain);
 				}
 #endif
 				break;
@@ -60,128 +55,105 @@ namespace cobalt
 			}
 		}
 
-		_impl->guiContext = ImGui::CreateContext();
+		_guiContext = ImGui::CreateContext();
 		ImGui::StyleColorsDark();
 
-		_impl->guiRenderer = new ImGuiDiligentRenderer(_impl->device, TEX_FORMAT_BGRA8_UNORM_SRGB, TEX_FORMAT_D32_FLOAT, 1024, 1024);
-		_impl->guiRenderer->CreateFontsTexture();
+		_guiRenderer = new ImGuiDiligentRenderer(_device, TEX_FORMAT_BGRA8_UNORM_SRGB, TEX_FORMAT_D32_FLOAT, 1024, 1024);
+		_guiRenderer->CreateFontsTexture();
 	}
 
 	GraphicsContext::~GraphicsContext()
 	{
-		if (!_impl)
-			return;
+		_immediateContext->Flush();
 
-		_impl->immediateContext->Flush();
-
-		ImGui::DestroyContext(_impl->guiContext);
-		_impl->guiContext = nullptr;
+		ImGui::DestroyContext(_guiContext);
+		_guiContext = nullptr;
 		
-		_impl->guiRenderer->InvalidateDeviceObjects();
-		delete _impl->guiRenderer;
-		
-		delete _impl;
+		_guiRenderer->InvalidateDeviceObjects();
+		delete _guiRenderer;
 	}
 
 	GraphicsContext::GraphicsContext(GraphicsContext&& other) noexcept
 	{
-		_impl = other._impl;
-		other._impl = nullptr;
 	}
 
 	GraphicsContext& GraphicsContext::operator=(GraphicsContext&& other) noexcept
 	{
-		if (_impl != nullptr)
-		{
-			_impl->immediateContext->Flush();
-
-			delete _impl;
-		}
-
-		_impl = other._impl;
-		other._impl = nullptr;
+		_immediateContext->Flush();
 
 		return *this;
 	}
 
-	void GraphicsContext::setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode) const
+	void GraphicsContext::setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode)
 	{
 		if (framebuffer == nullptr)
 		{
 			// Clear swapchain
-			auto* rtv = _impl->swapChain->GetCurrentBackBufferRTV();
-			_impl->immediateContext->SetRenderTargets(1, &rtv, 
-				_impl->swapChain->GetDepthBufferDSV(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
+			auto* rtv = _swapChain->GetCurrentBackBufferRTV();
+			_immediateContext->SetRenderTargets(1, &rtv, 
+				_swapChain->GetDepthBufferDSV(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 		else
 		{
-			const FramebufferHelper framebufferHelper(*framebuffer);
-
 			std::vector<Diligent::ITextureView*> views;
 			views.reserve(framebuffer->getInfo().renderTargets.size());
 			for(int index = 0; index < static_cast<int>(framebuffer->getInfo().renderTargets.size()); index++)
 			{
-				views.push_back(framebufferHelper.getRenderTarget(index, TextureTypeView::RENDER_TARGET));
+				views.push_back(framebuffer->getRenderTarget(index, TextureTypeView::RENDER_TARGET));
 			}
 
-			auto x = framebufferHelper.getDepthTarget(TextureTypeView::DEPTH_STENCIL);
+			auto x = framebuffer->getDepthTarget(TextureTypeView::DEPTH_STENCIL);
 
-			_impl->immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer->getInfo().renderTargets.size()),
+			_immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer->getInfo().renderTargets.size()),
 				views.data(),
 				x,
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
 
-	void GraphicsContext::clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, const uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode) const
+	void GraphicsContext::clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, const uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode)
 	{
 		if(framebuffer == nullptr)
 		{
 			// Clear swapchain
-			_impl->immediateContext->ClearRenderTarget(_impl->swapChain->GetCurrentBackBufferRTV(), rgba,
+			_immediateContext->ClearRenderTarget(_swapChain->GetCurrentBackBufferRTV(), rgba,
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 		else
 		{
-			const FramebufferHelper framebufferHelper(*framebuffer);
-
-			_impl->immediateContext->ClearRenderTarget(framebufferHelper.getRenderTarget(index, TextureTypeView::RENDER_TARGET), rgba,
+			_immediateContext->ClearRenderTarget(framebuffer->getRenderTarget(index, TextureTypeView::RENDER_TARGET), rgba,
 				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
 
 	void GraphicsContext::clearDepthStencil(const UniquePtr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, const float depth,
-	                                        const uint8_t stencil, ResourceStateTransitionMode transitionMode) const
+	                                        const uint8_t stencil, ResourceStateTransitionMode transitionMode)
 	{
 		if(framebuffer == nullptr)
 		{
 			// Clear swapchain
-			_impl->immediateContext->ClearDepthStencil(_impl->swapChain->GetDepthBufferDSV(), 
+			_immediateContext->ClearDepthStencil(_swapChain->GetDepthBufferDSV(), 
 				static_cast<Diligent::CLEAR_DEPTH_STENCIL_FLAGS>(flags), depth, stencil, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 		else
 		{
-			const FramebufferHelper framebufferHelper(*framebuffer);
-
-			_impl->immediateContext->ClearDepthStencil(framebufferHelper.getDepthTarget(TextureTypeView::DEPTH_STENCIL),
+			_immediateContext->ClearDepthStencil(framebuffer->getDepthTarget(TextureTypeView::DEPTH_STENCIL),
 				static_cast<Diligent::CLEAR_DEPTH_STENCIL_FLAGS>(flags), depth, stencil, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 		}
 	}
 
-	void GraphicsContext::setPipelineState(Shader& shader) const
+	void GraphicsContext::setPipelineState(Shader& shader)
 	{
-		const ShaderHelper shaderHelper(shader);
-		_impl->immediateContext->SetPipelineState(shaderHelper.getPipeline());
+		_immediateContext->SetPipelineState(shader.getPipeline());
 	}
 
-	void GraphicsContext::commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode) const
+	void GraphicsContext::commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode)
 	{
-		const ShaderHelper shaderHelper(shader);
-		_impl->immediateContext->CommitShaderResources(shaderHelper.getResourceBinding(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
+		_immediateContext->CommitShaderResources(shader.getResourceBinding(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 	}
 
 	void GraphicsContext::setVertexBuffers(const uint32_t start, const std::vector<VertexBuffer*>& buffers, uint32_t* offsets,
-	                                       ResourceStateTransitionMode transitionMode, SetVertexBufferFlags flags) const
+	                                       ResourceStateTransitionMode transitionMode, SetVertexBufferFlags flags)
 	{
 		std::vector<Diligent::IBuffer*> diligentBuffers;
 		for(VertexBuffer* buf : buffers)
@@ -190,18 +162,17 @@ namespace cobalt
 			diligentBuffers.push_back(bufferHelper.getBuffer());
 		}
 		
-		_impl->immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), diligentBuffers.data(), offsets,
+		_immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), diligentBuffers.data(), offsets,
 			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode), static_cast<Diligent::SET_VERTEX_BUFFERS_FLAGS>(flags));
 	}
 
 	void GraphicsContext::setIndexBuffer(IndexBuffer& buffer, const uint32_t byteOffset,
-		ResourceStateTransitionMode transitionMode) const
+		ResourceStateTransitionMode transitionMode)
 	{
-		const IndexBufferHelper bufferHelper(buffer);
-		_impl->immediateContext->SetIndexBuffer(bufferHelper.getBuffer(), byteOffset, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
+		_immediateContext->SetIndexBuffer(buffer.getBuffer(), byteOffset, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
 	}
 
-	void GraphicsContext::drawIndexed(const DrawIndexedAttributes& attribs) const
+	void GraphicsContext::drawIndexed(const DrawIndexedAttributes& attribs)
 	{
 		Diligent::DrawIndexedAttribs attr;
 		attr.BaseVertex = attribs.baseVertex;
@@ -212,20 +183,36 @@ namespace cobalt
 		attr.NumIndices = attribs.numIndices;
 		attr.NumInstances = attribs.numInstances;
 
-		_impl->immediateContext->DrawIndexed(attr);
+		_immediateContext->DrawIndexed(attr);
 	}
 
-	void GraphicsContext::present() const
+	void GraphicsContext::present()
 	{
-		_impl->guiRenderer->NewFrame(1280, 720, Diligent::SURFACE_TRANSFORM_IDENTITY);
-		_impl->guiRenderer->RenderDrawData(_impl->immediateContext, ImGui::GetDrawData());
-		_impl->guiRenderer->EndFrame();
+		_guiRenderer->NewFrame(1280, 720, Diligent::SURFACE_TRANSFORM_IDENTITY);
+		_guiRenderer->RenderDrawData(_immediateContext, ImGui::GetDrawData());
+		_guiRenderer->EndFrame();
 
-		_impl->swapChain->Present(static_cast<uint32_t>(_impl->window->vSyncEnabled()));
+		_swapChain->Present(static_cast<uint32_t>(_window->vSyncEnabled()));
 	}
 
-	void GraphicsContext::resize(const uint32_t width, const uint32_t height) const
+	void GraphicsContext::resize(const uint32_t width, const uint32_t height)
 	{
-		_impl->swapChain->Resize(width, height);
+		_swapChain->Resize(width, height);
 	}
+
+	Diligent::RefCntAutoPtr<Diligent::IRenderDevice> GraphicsContext::getRenderDevice() const noexcept
+	{
+		return _device;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::IDeviceContext> GraphicsContext::getImmediateContext() const noexcept
+	{
+		return _immediateContext;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::ISwapChain> GraphicsContext::getSwapchain() const noexcept
+	{
+		return _swapChain;
+	}
+
 }

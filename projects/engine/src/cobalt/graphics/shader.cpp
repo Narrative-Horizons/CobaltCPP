@@ -3,34 +3,14 @@
 #include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
 
-#include <cobalt/graphics/graphicscontexthelper.hpp>
-#include <cobalt/graphics/framebufferhelper.hpp>
-
-#include "shaderhelper.hpp"
-
 namespace cobalt
 {
-	ShaderResource::ShaderResource()
-	{
-		_impl = new ShaderResourceImpl();
-	}
-
-	ShaderResource::~ShaderResource()
-	{
-		delete _impl;
-		_impl = nullptr;
-	}
-
 	Shader::Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo)
 	{
-		_impl = new ShaderImpl;
-
 		using namespace Diligent;
 		GraphicsPipelineStateCreateInfo graphicsPsoInfo;
 		ComputePipelineStateCreateInfo computePsoInfo;
 	
-		const GraphicsContextHelper contextHelper(context);
-
 		std::string vertexShaderName = (createInfo.name + " VS");
 		std::string pixelShaderName = (createInfo.name + " PS");
 		std::string computeShaderName = (createInfo.name + " CS");
@@ -65,7 +45,7 @@ namespace cobalt
 			shaderCI.Source = createInfo.vertexSource.c_str();
 
 			RefCntAutoPtr<IShader> cShader;
-			contextHelper.getRenderDevice()->CreateShader(shaderCI, &cShader);
+			context.getRenderDevice()->CreateShader(shaderCI, &cShader);
 
 			computePsoInfo.pCS = cShader;
 		}
@@ -75,8 +55,8 @@ namespace cobalt
 			if(createInfo.renderTargetFormats.empty())
 			{
 				// Use swapchain
-				createInfo.renderTargetFormats.push_back(static_cast<TextureFormat>(contextHelper.getSwapchain()->GetDesc().ColorBufferFormat));
-				createInfo.depthTargetFormat = static_cast<TextureFormat>(contextHelper.getSwapchain()->GetDesc().DepthBufferFormat);
+				createInfo.renderTargetFormats.push_back(static_cast<TextureFormat>(context.getSwapchain()->GetDesc().ColorBufferFormat));
+				createInfo.depthTargetFormat = static_cast<TextureFormat>(context.getSwapchain()->GetDesc().DepthBufferFormat);
 			}
 			
 			graphicsPsoInfo.GraphicsPipeline.NumRenderTargets = static_cast<uint8_t>(createInfo.renderTargetFormats.size())
@@ -103,7 +83,7 @@ namespace cobalt
 			graphicsPsoInfo.GraphicsPipeline.InputLayout.LayoutElements = vertexLayouts;
 			psoDesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
 
-			_impl->type = psoDesc.PipelineType;
+			_type = psoDesc.PipelineType;
 			
 			Diligent::ShaderCreateInfo shaderCi;
 			shaderCi.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
@@ -115,9 +95,9 @@ namespace cobalt
 			shaderCi.Desc.Name = vertexShaderName.c_str();
 			shaderCi.Source = createInfo.vertexSource.c_str();
 			
-			contextHelper.getRenderDevice()->CreateShader(shaderCi, &_impl->vShader);
+			context.getRenderDevice()->CreateShader(shaderCi, &_vShader);
 
-			graphicsPsoInfo.pVS = _impl->vShader;
+			graphicsPsoInfo.pVS = _vShader;
 
 			if(!createInfo.pixelSource.empty())
 			{
@@ -127,8 +107,8 @@ namespace cobalt
 				shaderCi.Desc.Name = pixelShaderName.c_str();
 				shaderCi.Source = createInfo.pixelSource.c_str();
 
-				contextHelper.getRenderDevice()->CreateShader(shaderCi, &_impl->pShader);
-				graphicsPsoInfo.pPS = _impl->pShader;
+				context.getRenderDevice()->CreateShader(shaderCi, &_pShader);
+				graphicsPsoInfo.pPS = _pShader;
 			}
 		}
 
@@ -147,13 +127,13 @@ namespace cobalt
 				ShaderResourceVariableDesc var{ static_cast<SHADER_TYPE>(resource.shaderStages), resource.name.c_str(),
 					static_cast<SHADER_RESOURCE_VARIABLE_TYPE>(resource.type), static_cast<SHADER_VARIABLE_FLAGS>(resource.flags) };
 
-				_impl->vars.push_back(var);
+				_vars.push_back(var);
 			}
 
 			if (hasNonStaticResources)
 			{
-				psoDesc.ResourceLayout.Variables = &_impl->vars[0];
-				psoDesc.ResourceLayout.NumVariables = static_cast<uint32_t>(_impl->vars.size());
+				psoDesc.ResourceLayout.Variables = &_vars[0];
+				psoDesc.ResourceLayout.NumVariables = static_cast<uint32_t>(_vars.size());
 			}
 		}
 
@@ -167,21 +147,21 @@ namespace cobalt
 				sampler.mipLODBias, sampler.maxAnisotropy, static_cast<COMPARISON_FUNCTION>(sampler.comparisonFunc), sampler.minLOD, sampler.maxLOD };
 				ImmutableSamplerDesc desc{ static_cast<SHADER_TYPE>(shaderStages), name.c_str(), samplerDesc };
 
-				_impl->samplers.push_back(desc);
+				_samplers.push_back(desc);
 			}
 
 			PipelineStateDesc& psoDesc = graphicsPsoInfo.PSODesc;
-			psoDesc.ResourceLayout.ImmutableSamplers = &_impl->samplers[0];
-			psoDesc.ResourceLayout.NumImmutableSamplers = static_cast<uint32_t>(_impl->samplers.size());
+			psoDesc.ResourceLayout.ImmutableSamplers = &_samplers[0];
+			psoDesc.ResourceLayout.NumImmutableSamplers = static_cast<uint32_t>(_samplers.size());
 		}
 
 		if(!createInfo.computeSource.empty())
 		{
-			contextHelper.getRenderDevice()->CreateComputePipelineState(computePsoInfo, &_impl->pipeline);
+			context.getRenderDevice()->CreateComputePipelineState(computePsoInfo, &_pipeline);
 		}
 		else
 		{
-			contextHelper.getRenderDevice()->CreateGraphicsPipelineState(graphicsPsoInfo, &_impl->pipeline);
+			context.getRenderDevice()->CreateGraphicsPipelineState(graphicsPsoInfo, &_pipeline);
 
 			if (!createInfo.shaderResources.empty())
 			{
@@ -191,75 +171,99 @@ namespace cobalt
 				{
 					if (resource.type == ShaderResourceType::STATIC)
 					{
-						const ShaderResourceHelper resourceHelper(*resource.resource);
-
-						auto x = _impl->pipeline->GetStaticVariableByName(static_cast<Diligent::SHADER_TYPE>(resource.shaderStages), resource.name.c_str());
+						auto x = _pipeline->GetStaticVariableByName(static_cast<Diligent::SHADER_TYPE>(resource.shaderStages), resource.name.c_str());
 						if (x == nullptr)
 							continue; // TODO : print error
 						
-						x->Set(resourceHelper.getResourceObject());
+						x->Set(resource.resource->getResourceObject());
 					}
 				}
 			}
 
-			_impl->pipeline->CreateShaderResourceBinding(&_impl->srb, true);
+			_pipeline->CreateShaderResourceBinding(&_srb, true);
 		}
 	}
 
-	Shader::~Shader()
+	void Shader::setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, ShaderResource& data)
 	{
-		delete _impl;
-		_impl = nullptr;
-	}
-
-	void Shader::setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, ShaderResource& data) const
-	{
-		const ShaderResourceHelper resourceHelper(data);
-
 		switch(resourceType)
 		{
 			case ShaderResourceType::MUTABLE:
 			case ShaderResourceType::DYNAMIC:
 			{
-				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
-				x->Set(resourceHelper.getResourceObject());
+				auto x = _srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
+				x->Set(data.getResourceObject());
 				break;
 			}
 		}
 	}
 
 	void Shader::setDataArray(ShaderType shaderType, ShaderResourceType resourceType, std::string_view name,
-		ShaderResource& data) const
+		ShaderResource& data)
 	{
-		const ShaderResourceHelper resourceHelper(data);
-
 		switch (resourceType)
 		{
 			case ShaderResourceType::MUTABLE:
 			case ShaderResourceType::DYNAMIC:
 			{
-				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
+				auto x = _srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
 				//x->SetArray(resourceHelper.getResourceObjects(), 0, resourceHelper.getResourceObjectsCount());
 				break;
 			}
 		}
 	}
 
-	void Shader::setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, const Framebuffer& framebuffer, const uint32_t index) const
+	void Shader::setData(ShaderType shaderType, const ShaderResourceType resourceType, const std::string_view name, Framebuffer& framebuffer, const uint32_t index)
 	{
-		const FramebufferHelper resourceHelper(framebuffer);
-
 		switch (resourceType)
 		{
 			case ShaderResourceType::MUTABLE:
 			case ShaderResourceType::DYNAMIC:
 			{
-				auto x = _impl->srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
-				x->Set(resourceHelper.getRenderTarget(index, TextureTypeView::SHADER_RESOURCE));
+				auto x = _srb->GetVariableByName(static_cast<Diligent::SHADER_TYPE>(shaderType), name.data());
+				x->Set(framebuffer.getRenderTarget(index, TextureTypeView::SHADER_RESOURCE));
 				break;
 			}
 		}
 	}
 
-	
+	Diligent::RefCntAutoPtr<Diligent::IPipelineState> Shader::getPipeline() const
+	{
+		return _pipeline;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::IShader> Shader::getVertexShader() const
+	{
+		return _vShader;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::IShader> Shader::getPixelShader() const
+	{
+		return _pShader;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::IShader> Shader::getComputeShader() const
+	{
+		return _cShader;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::IShaderResourceBinding> Shader::getResourceBinding() const
+	{
+		return _srb;
+	}
+
+	Diligent::RefCntAutoPtr<Diligent::IDeviceObject> ShaderResource::getResourceObject() const
+	{
+		return _objectData;
+	}
+
+	/*Diligent::RefCntAutoPtr<Diligent::IDeviceObject*> ShaderResourceHelper::getResourceObjects() const
+	{
+		return _resource._impl->arrayData;
+	}*/
+
+	uint32_t ShaderResource::getResourceObjectsCount() const
+	{
+		return _numElements;
+	}
 }

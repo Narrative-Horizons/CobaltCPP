@@ -10,6 +10,13 @@
 
 #include <cobalt/containers/smartpointers.hpp>
 
+#include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
+#include <DiligentCore/Graphics/GraphicsEngine/interface/DeviceContext.h>
+#include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
+#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
+#include <DiligentTools/Imgui/interface/ImGuiDiligentRenderer.hpp>
+#include <DiligentTools/ThirdParty/imgui/imgui.h>
+
 namespace cobalt
 {
 	class Shader;
@@ -48,27 +55,35 @@ namespace cobalt
 			GraphicsContext(GraphicsContext&& other) noexcept;
 			GraphicsContext& operator=(GraphicsContext&& other) noexcept;
 
-			void setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode) const;
-			void clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode) const;
-			void clearDepthStencil(const UniquePtr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, float depth, uint8_t stencil, ResourceStateTransitionMode transitionMode) const;
+			void setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode);
+			void clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode);
+			void clearDepthStencil(const UniquePtr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, float depth, uint8_t stencil, ResourceStateTransitionMode transitionMode);
 
-			void setPipelineState(Shader& shader) const;
-			void commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode) const;
+			void setPipelineState(Shader& shader);
+			void commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode);
 		
 			void setVertexBuffers(uint32_t start, const std::vector<VertexBuffer*>& buffers, uint32_t* offsets, 
-									ResourceStateTransitionMode transitionMode, SetVertexBufferFlags flags) const;
-			void setIndexBuffer(IndexBuffer& buffer, uint32_t byteOffset, ResourceStateTransitionMode transitionMode) const;
+									ResourceStateTransitionMode transitionMode, SetVertexBufferFlags flags);
+			void setIndexBuffer(IndexBuffer& buffer, uint32_t byteOffset, ResourceStateTransitionMode transitionMode);
 
-			void drawIndexed(const DrawIndexedAttributes& attribs) const;
+			void drawIndexed(const DrawIndexedAttributes& attribs);
 
-			void present() const;
+			void present();
 
-			void resize(uint32_t width, uint32_t height) const;
+			void resize(uint32_t width, uint32_t height);
+
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IRenderDevice> getRenderDevice() const noexcept;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IDeviceContext> getImmediateContext() const noexcept;
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::ISwapChain> getSwapchain() const noexcept;
 
 		private:
-			friend class GraphicsContextHelper;
+			Diligent::RefCntAutoPtr<Diligent::IRenderDevice> _device;
+			Diligent::RefCntAutoPtr<Diligent::IDeviceContext> _immediateContext;
+			Diligent::RefCntAutoPtr<Diligent::ISwapChain> _swapChain;
+			Diligent::RENDER_DEVICE_TYPE _deviceType = Diligent::RENDER_DEVICE_TYPE_D3D11;
+			Diligent::ImGuiDiligentRenderer* _guiRenderer;
+			ImGuiContext* _guiContext;
 
-			struct GraphicsContextImpl;
-			GraphicsContextImpl* _impl;
+			const Window* _window;
 	};
 }
