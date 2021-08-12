@@ -4,16 +4,8 @@
 
 namespace cobalt
 {
-	struct PBRPass::PBRPassImpl
-	{
-		UniquePtr<Shader> pbrShader;
-		UniquePtr<Shader> pbrTranslucentShader;
-	};
-	
 	PBRPass::PBRPass(GraphicsContext& context) : RenderPass(context, "PBR")
 	{
-		_impl = new PBRPassImpl();
-
 		std::ifstream vFile("data/shaders/pbr_vs.hlsl");
 		std::string vSource((std::istreambuf_iterator<char>(vFile)),
 			std::istreambuf_iterator<char>());
@@ -45,13 +37,7 @@ namespace cobalt
 		pbrShaderCi.shaderResources.push_back(tD);
 		pbrShaderCi.immutableSamplers.push_back(imSampler);
 
-		_impl->pbrShader = MakeUnique<Shader>(context, pbrShaderCi);
-	}
-
-	PBRPass::~PBRPass()
-	{
-		delete _impl;
-		_impl = nullptr;
+		_pbrShader = MakeUnique<Shader>(context, pbrShaderCi);
 	}
 
 	void PBRPass::render(const FrameInfo frameInfo)

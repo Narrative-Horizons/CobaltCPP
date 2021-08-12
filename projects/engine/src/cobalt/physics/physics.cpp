@@ -6,55 +6,7 @@
 
 namespace cobalt
 {
-	struct Physics::PhysicsImpl
-	{
-		physx::PxFoundation* foundation;
-		physx::PxPvd* pvd;
-		physx::PxPvdTransport* transport;
-		physx::PxPhysics* physics;
-		physx::PxCooking* cooking;
-		physx::PxCudaContextManager* cudaContext;
-		physx::PxDefaultCpuDispatcher* cpuDispatcher;
-		physx::PxSimulationFilterShader* simulationFilterShader;
-		physx::PxScene* scene;
-
-		~PhysicsImpl()
-		{
-			scene->release();
-			scene = nullptr;
-
-			cpuDispatcher->release();
-			cpuDispatcher = nullptr;
-
-#if defined(PX_SUPPORT_GPU_PHYSX) && defined(_WIN32)
-			if (cudaContext != nullptr)
-			{
-				cudaContext->release();
-				cudaContext = nullptr;
-			}
-#endif
-
-			physics->release();
-			physics = nullptr;
-
-			delete simulationFilterShader;
-			simulationFilterShader = nullptr;
-
-			cooking->release();
-			cooking = nullptr;
-
-			pvd->release();
-			pvd = nullptr;
-
-			transport->release();
-			transport = nullptr;
-
-			foundation->release();
-			foundation = nullptr;
-		}
-	};
-	
-	bool isCCDActive(physx::PxFilterData& filterData)
+	bool IsCcdActive(physx::PxFilterData& filterData)
 	{
 		return true;
 		//return filterData.word3 & CCD_FLAG ? true : false;
@@ -95,17 +47,15 @@ namespace cobalt
 
 	Physics::Physics()
 	{
-		_impl = new PhysicsImpl();
-
 		using namespace physx;
 
 		static PxDefaultErrorCallback defaultErrorCallback;
 		static PxDefaultAllocator defaultAllocatorCallback;
 
-		_impl->foundation = PxCreateFoundation(PX_PHYSICS_VERSION, defaultAllocatorCallback,
+		_foundation = PxCreateFoundation(PX_PHYSICS_VERSION, defaultAllocatorCallback,
 			defaultErrorCallback);
 
-		if (_impl->foundation == nullptr)
+		if (_foundation == nullptr)
 		{
 			std::cerr << "PxCreateFoundation failed!" << std::endl;
 			return;
@@ -114,14 +64,14 @@ namespace cobalt
 #if defined(PX_SUPPORT_GPU_PHYSX) && defined(_WIN32)
 		const PxCudaContextManagerDesc cudaDesc;
 
-		_impl->cudaContext = PxCreateCudaContextManager(*_impl->foundation, cudaDesc);
+		_cudaContext = PxCreateCudaContextManager(*_foundation, cudaDesc);
 
-		if(_impl->cudaContext == nullptr)
+		if(_cudaContext == nullptr)
 		{
 			std::cerr << "PxCreateCudaContextManager failed!" << std::endl;
 		}
 
-		if(_impl->cudaContext != nullptr && _impl->cudaContext->contextIsValid() == false)
+		if(_cudaContext != nullptr && _cudaContext->contextIsValid() == false)
 		{
 			std::cerr << "Cuda Context is invalid!" << std::endl;
 		}
@@ -129,12 +79,12 @@ namespace cobalt
 
 		const PxTolerancesScale scale;
 
-		_impl->pvd = PxCreatePvd(*_impl->foundation);
-		_impl->transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
-		_impl->pvd->connect(*_impl->transport, PxPvdInstrumentationFlag::eALL);
+		_pvd = PxCreatePvd(*_foundation);
+		_transport = PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
+		_pvd->connect(*_transport, PxPvdInstrumentationFlag::eALL);
 
-		_impl->physics = PxCreatePhysics(PX_PHYSICS_VERSION, *_impl->foundation, scale, true, _impl->pvd);
-		if (_impl->physics == nullptr)
+		_physics = PxCreatePhysics(PX_PHYSICS_VERSION, *_foundation, scale, true, _pvd);
+		if (_physics == nullptr)
 		{
 			std::cerr << "PxCreatePhysics failed!" << std::endl;
 			return;
@@ -143,14 +93,14 @@ namespace cobalt
 		PxCookingParams params(scale);
 		params.meshWeldTolerance = 0.001f;
 		params.meshPreprocessParams = PxMeshPreprocessingFlags(PxMeshPreprocessingFlag::eWELD_VERTICES);
-		_impl->cooking = PxCreateCooking(PX_PHYSICS_VERSION, *_impl->foundation, params);
-		if (_impl->cooking == nullptr)
+		_cooking = PxCreateCooking(PX_PHYSICS_VERSION, *_foundation, params);
+		if (_cooking == nullptr)
 		{
 			std::cerr << "PxCreateCooking failed!" << std::endl;
 			return;
 		}
 
-		if (!PxInitExtensions(*_impl->physics, _impl->pvd))
+		if (!PxInitExtensions(*_physics, _pvd))
 		{
 			std::cerr << "PxInitExtensions failed!" << std::endl;
 			return;
@@ -162,13 +112,13 @@ namespace cobalt
 
 		if(!sceneDesc.cpuDispatcher)
 		{
-			_impl->cpuDispatcher = PxDefaultCpuDispatcherCreate(1);
-			if(_impl->cpuDispatcher == nullptr)
+			_cpuDispatcher = PxDefaultCpuDispatcherCreate(1);
+			if(_cpuDispatcher == nullptr)
 			{
 				std::cerr << "PxDefaultCpuDispatcherCreate failed!" << std::endl;
 				return;
 			}
-			sceneDesc.cpuDispatcher = _impl->cpuDispatcher;
+			sceneDesc.cpuDispatcher = _cpuDispatcher;
 		}
 
 #if defined(PX_SUPPORT_GPU_PHYSX) && defined(_WIN32)
@@ -178,16 +128,44 @@ namespace cobalt
 		sceneDesc.flags |= PxSceneFlag::eENABLE_CCD;
 		sceneDesc.filterShader = gameCollisionFilterShader;
 
-		_impl->scene = _impl->physics->createScene(sceneDesc);
-		//_impl->scene->setSimulationEventCallback() TODO
-		_impl->scene->simulate(0.02f); // Prewarm
+		_scene = _physics->createScene(sceneDesc);
+		//_scene->setSimulationEventCallback() TODO
+		_scene->simulate(0.02f); // Prewarm
 	}
 	
 	Physics::~Physics()
-	{
+	{	
 		PxCloseExtensions();
+		
+		_scene->release();
+		_scene = nullptr;
 
-		delete _impl;
-		_impl = nullptr;
+		_cpuDispatcher->release();
+		_cpuDispatcher = nullptr;
+
+#if defined(PX_SUPPORT_GPU_PHYSX) && defined(_WIN32)
+		if (_cudaContext != nullptr)
+		{
+			_cudaContext->release();
+			_cudaContext = nullptr;
+		}
+#endif
+
+		_physics->release();
+		_physics = nullptr;
+
+		_simulationFilterShader = nullptr;
+
+		_cooking->release();
+		_cooking = nullptr;
+
+		_pvd->release();
+		_pvd = nullptr;
+
+		_transport->release();
+		_transport = nullptr;
+
+		_foundation->release();
+		_foundation = nullptr;
 	}
 }

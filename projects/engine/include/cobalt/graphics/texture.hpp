@@ -21,14 +21,12 @@ namespace cobalt
 	{
 		public:
 			Texture(const GraphicsContext& context, const Image& image, const TextureCreateInfo& createInfo);
-			~Texture();
+			~Texture() = default;
+
+			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::ITexture> getTexture() const;
 
 		private:
-			friend class TextureHelper;
-
-			struct TextureImpl;
-			TextureImpl* _timpl;
-		
 			const Image& _image;
+			Diligent::RefCntAutoPtr<Diligent::ITexture> _texture;
 	};
 }

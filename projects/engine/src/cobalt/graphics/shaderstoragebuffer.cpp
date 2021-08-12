@@ -4,23 +4,10 @@
 
 namespace cobalt
 {
-	struct ShaderStorageBuffer::ShaderStorageBufferImpl
+	ShaderStorageBuffer::ShaderStorageBuffer(const GraphicsContext& context, ShaderResourceType type, const size_t size, const std::string& name) : ShaderResource(), _context(context)
 	{
-		Diligent::RefCntAutoPtr<Diligent::IBuffer> buffer;
-		const GraphicsContext& context;
-		size_t size;
-
-		explicit ShaderStorageBufferImpl(const GraphicsContext& context) : context(context), size(0)
-		{
-
-		}
-	};
-
-	ShaderStorageBuffer::ShaderStorageBuffer(const GraphicsContext& context, ShaderResourceType type, const size_t size, const std::string& name) : ShaderResource()
-	{
-		_uimpl = new ShaderStorageBufferImpl(context);
-		_uimpl->size = size;
-
+		_size = size;
+		
 		Diligent::BufferDesc ubDesc;
 		ubDesc.Name = name.c_str();
 		ubDesc.uiSizeInBytes = static_cast<uint32_t>(size); // TODO: * this the amount of structs inside the buffer
@@ -30,23 +17,17 @@ namespace cobalt
 		ubDesc.ElementByteStride = static_cast<uint32_t>(size);
 		ubDesc.CPUAccessFlags = Diligent::CPU_ACCESS_WRITE;
 
-		context.getRenderDevice()->CreateBuffer(ubDesc, nullptr, &_uimpl->buffer);
+		context.getRenderDevice()->CreateBuffer(ubDesc, nullptr, &_buffer);
 
-		_objectData = _uimpl->buffer->GetDefaultView(Diligent::BUFFER_VIEW_SHADER_RESOURCE);
+		_objectData = _buffer->GetDefaultView(Diligent::BUFFER_VIEW_SHADER_RESOURCE);
 	}
 
-	ShaderStorageBuffer::~ShaderStorageBuffer()
-	{
-		delete _uimpl;
-		_uimpl = nullptr;
-	}
-
-	void ShaderStorageBuffer::setData(const void* data, ResourceStateTransitionMode transitionMode) const
+	void ShaderStorageBuffer::setData(const void* data, ResourceStateTransitionMode transitionMode)
 	{
 		void* mappedData = nullptr;
-		_uimpl->context.getImmediateContext()->MapBuffer(_uimpl->buffer, Diligent::MAP_WRITE, Diligent::MAP_FLAG_DISCARD, mappedData);
-		memcpy(mappedData, data, _uimpl->size);
-		_uimpl->context.getImmediateContext()->UnmapBuffer(_uimpl->buffer, Diligent::MAP_WRITE);
+		_context.getImmediateContext()->MapBuffer(_buffer, Diligent::MAP_WRITE, Diligent::MAP_FLAG_DISCARD, mappedData);
+		memcpy(mappedData, data, _size);
+		_context.getImmediateContext()->UnmapBuffer(_buffer, Diligent::MAP_WRITE);
 
 		/*contextHelper.getImmediateContext()->UpdateBuffer(_uimpl->buffer, 0, static_cast<uint32_t>(_uimpl->size), data,
 			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));*/

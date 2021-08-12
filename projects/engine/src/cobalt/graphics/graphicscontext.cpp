@@ -7,8 +7,6 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
 #include <DiligentTools/Imgui/interface/ImGuiDiligentRenderer.hpp>
 
-#include "vertexbufferhelper.hpp"
-
 #include <cobalt/graphics/shader.hpp>
 #include <cobalt/input.hpp>
 
@@ -158,8 +156,7 @@ namespace cobalt
 		std::vector<Diligent::IBuffer*> diligentBuffers;
 		for(VertexBuffer* buf : buffers)
 		{
-			VertexBufferHelper bufferHelper(*buf);
-			diligentBuffers.push_back(bufferHelper.getBuffer());
+			diligentBuffers.push_back(buf->getBuffer());
 		}
 		
 		_immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), diligentBuffers.data(), offsets,

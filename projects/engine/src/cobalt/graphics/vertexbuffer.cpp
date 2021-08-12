@@ -2,14 +2,11 @@
 #include <DiligentCore/Graphics/GraphicsEngine/interface/Buffer.h>
 
 #include <cobalt/graphics/graphicscontext.hpp>
-#include <cobalt/graphics/vertexbufferhelper.hpp>
 
 namespace cobalt
 {
 	VertexBuffer::VertexBuffer(const GraphicsContext& context, const void* data, const size_t size)
 	{
-		_impl = new VertexBufferImpl();
-		
 		Diligent::BufferDesc bufferDesc;
 		bufferDesc.Name = "Vertex Buffer";
 		bufferDesc.Usage = Diligent::USAGE_IMMUTABLE;
@@ -20,12 +17,11 @@ namespace cobalt
 		bufferData.pData = data;
 		bufferData.DataSize = static_cast<uint32_t>(size);
 
-		context.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_impl->buffer);
+		context.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_buffer);
 	}
 
-	VertexBuffer::~VertexBuffer()
+	Diligent::RefCntAutoPtr<Diligent::IBuffer> VertexBuffer::getBuffer() const
 	{
-		delete _impl;
-		_impl = nullptr;
+		return _buffer;
 	}
 }

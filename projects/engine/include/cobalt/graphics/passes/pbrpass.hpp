@@ -7,13 +7,13 @@ namespace cobalt
 	class PBRPass : public RenderPass
 	{
 		public:
-			PBRPass(GraphicsContext& context);
-			~PBRPass() override;
+			explicit PBRPass(GraphicsContext& context);
+			~PBRPass() override = default;
 
 			void render(FrameInfo frameInfo) override;
 
 		private:
-			struct PBRPassImpl;
-			PBRPassImpl* _impl;
+			UniquePtr<Shader> _pbrShader;
+			UniquePtr<Shader> _pbrTranslucentShader;
 	};
 }

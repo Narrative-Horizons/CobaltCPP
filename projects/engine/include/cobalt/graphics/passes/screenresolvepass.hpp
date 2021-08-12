@@ -7,14 +7,19 @@ namespace cobalt
 	class ScreenResolvePass : public RenderPass
 	{
 		public:
-			ScreenResolvePass(GraphicsContext& context);
-			~ScreenResolvePass() override;
+			explicit ScreenResolvePass(GraphicsContext& context);
+			~ScreenResolvePass() override = default;
 
-			void setInputTexture(UniquePtr<Framebuffer> buffer, uint32_t index) const;
+			void setInputTexture(UniquePtr<Framebuffer> buffer, uint32_t index);
 			void render(FrameInfo frameInfo) override;
 
 		private:
-			struct ScreenResolvePassImpl;
-			ScreenResolvePassImpl* _impl;
+			UniquePtr<VertexBuffer> _vertexBuffer;
+			UniquePtr<IndexBuffer> _indexBuffer;
+			std::vector<VertexBuffer*> _screenBuffers;
+			UniquePtr<Shader> _resolveShader;
+
+			Framebuffer* _sourceBuffer;
+			uint32_t _sourceIndex;
 	};
 }

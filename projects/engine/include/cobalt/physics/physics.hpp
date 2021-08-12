@@ -1,5 +1,7 @@
 #pragma once
 
+#include <PxPhysicsAPI.h>
+
 namespace cobalt
 {
 	class Physics
@@ -9,7 +11,14 @@ namespace cobalt
 			~Physics();
 
 		private:
-			struct PhysicsImpl;
-			PhysicsImpl* _impl;
+			physx::PxFoundation* _foundation;
+			physx::PxPvd* _pvd;
+			physx::PxPvdTransport* _transport;
+			physx::PxPhysics* _physics;
+			physx::PxCooking* _cooking;
+			physx::PxCudaContextManager* _cudaContext;
+			physx::PxDefaultCpuDispatcher* _cpuDispatcher;
+			physx::PxSimulationFilterShader* _simulationFilterShader;
+			physx::PxScene* _scene;
 	};
 }

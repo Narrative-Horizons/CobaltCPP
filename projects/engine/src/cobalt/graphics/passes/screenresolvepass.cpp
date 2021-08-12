@@ -4,20 +4,10 @@
 
 namespace cobalt
 {
-	struct ScreenResolvePass::ScreenResolvePassImpl
-	{
-		UniquePtr<VertexBuffer> vertexBuffer;
-		UniquePtr<IndexBuffer> indexBuffer;
-		std::vector<VertexBuffer*> screenBuffers;
-		UniquePtr<Shader> resolveShader;
-
-		Framebuffer* sourceBuffer;
-		uint32_t sourceIndex;
-	};
-	
 	ScreenResolvePass::ScreenResolvePass(GraphicsContext& context) : RenderPass(context, "ScreenResolvePass")
 	{
-		_impl = new ScreenResolvePassImpl();
+		_sourceBuffer = nullptr;
+		_sourceIndex = 0;
 		
 		float screenVertices[] = {
 			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -30,8 +20,8 @@ namespace cobalt
 			2, 1, 0, 0, 3, 2
 		};
 
-		_impl->vertexBuffer = MakeUnique<VertexBuffer>(context, screenVertices, sizeof(screenVertices));
-		_impl->indexBuffer = MakeUnique<IndexBuffer>(context, screenIndices, sizeof(screenIndices));
+		_vertexBuffer = MakeUnique<VertexBuffer>(context, screenVertices, sizeof(screenVertices));
+		_indexBuffer = MakeUnique<IndexBuffer>(context, screenIndices, sizeof(screenIndices));
 
 		std::ifstream rVFile("data/shaders/resolve_vs.hlsl");
 		std::string rVSource((std::istreambuf_iterator<char>(rVFile)),
@@ -64,20 +54,14 @@ namespace cobalt
 		resolveShaderCi.shaderResources.push_back(tD);
 		resolveShaderCi.immutableSamplers.push_back(imSampler);
 
-		 _impl->resolveShader = MakeUnique<Shader>(context, resolveShaderCi);
-		_impl->screenBuffers.push_back(_impl->vertexBuffer.get());
+		 _resolveShader = MakeUnique<Shader>(context, resolveShaderCi);
+		_screenBuffers.push_back(_vertexBuffer.get());
 	}
 
-	ScreenResolvePass::~ScreenResolvePass()
+	void ScreenResolvePass::setInputTexture(const UniquePtr<Framebuffer> buffer, const uint32_t index)
 	{
-		delete _impl;
-		_impl = nullptr;
-	}
-
-	void ScreenResolvePass::setInputTexture(const UniquePtr<Framebuffer> buffer, const uint32_t index) const
-	{
-		_impl->sourceBuffer = buffer.get();
-		_impl->sourceIndex = index;
+		_sourceBuffer = buffer.get();
+		_sourceIndex = index;
 	}
 
 	void ScreenResolvePass::render(const FrameInfo frameInfo)
@@ -92,13 +76,13 @@ namespace cobalt
 
 		uint32_t offset = 0;
 
-		_context.setVertexBuffers(0, _impl->screenBuffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
-		_context.setIndexBuffer(*_impl->indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
+		_context.setVertexBuffers(0, _screenBuffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
+		_context.setIndexBuffer(*_indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
 
-		_impl->resolveShader->setData(ShaderType::PIXEL, ShaderResourceType::DYNAMIC, "tex", *_impl->sourceBuffer, _impl->sourceIndex);
+		_resolveShader->setData(ShaderType::PIXEL, ShaderResourceType::DYNAMIC, "tex", *_sourceBuffer, _sourceIndex);
 
-		_context.setPipelineState(*_impl->resolveShader);
-		_context.commitShaderResources(*_impl->resolveShader, ResourceStateTransitionMode::TRANSITION);
+		_context.setPipelineState(*_resolveShader);
+		_context.commitShaderResources(*_resolveShader, ResourceStateTransitionMode::TRANSITION);
 
 		DrawIndexedAttributes screenAttr;
 		screenAttr.indexType = ValueType::UINT32;

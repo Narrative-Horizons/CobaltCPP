@@ -10,12 +10,13 @@ namespace cobalt
 		public:
 			// TODO: Add bind type
 			ShaderStorageBuffer(const GraphicsContext& context, ShaderResourceType type, size_t size, const std::string& name);
-			~ShaderStorageBuffer();
+			~ShaderStorageBuffer() = default;
 
-			void setData(const void* data, ResourceStateTransitionMode transitionMode) const;
+			void setData(const void* data, ResourceStateTransitionMode transitionMode);
 
 		private:
-			struct ShaderStorageBufferImpl;
-			ShaderStorageBufferImpl* _uimpl;
+			Diligent::RefCntAutoPtr<Diligent::IBuffer> _buffer;
+			const GraphicsContext& _context;
+			size_t _size;
 	};
 }
