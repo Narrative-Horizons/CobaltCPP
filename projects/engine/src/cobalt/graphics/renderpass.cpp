@@ -2,7 +2,7 @@
 
 namespace cobalt
 {
-	RenderPass::RenderPass(GraphicsContext& context, const std::string& name) : _context(context)
+	RenderPass::RenderPass(const UniquePtr<GraphicsContext>& context, const std::string& name) : _context(context)
 	{
 		_name = name;
 	}

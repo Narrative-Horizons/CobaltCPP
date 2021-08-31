@@ -7,6 +7,7 @@
 #include <cobalt/window.hpp>
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/physics/physics.hpp>
+#include <cobalt/resources/resourcemanager.hpp>
 
 #include <PxPhysicsAPI.h>
 
@@ -37,6 +38,8 @@ namespace cobalt
 
 			void run()
 			{
+				ResourceManager* resMan = new ResourceManager(_context);
+				_resourceManager = UniquePtr<ResourceManager>(resMan);
 				_physics = MakeUnique<Physics>();
 
 				_app->initialize();
@@ -80,6 +83,8 @@ namespace cobalt
 			UniquePtr<GraphicsContext> _context;
 
 			UniquePtr<Physics> _physics;
+
+			UniquePtr<ResourceManager> _resourceManager;
 
 			static Engine<Application>* _instance;
 	};

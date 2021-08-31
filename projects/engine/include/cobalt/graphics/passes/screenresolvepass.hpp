@@ -7,7 +7,7 @@ namespace cobalt
 	class ScreenResolvePass : public RenderPass
 	{
 		public:
-			explicit ScreenResolvePass(GraphicsContext& context);
+			explicit ScreenResolvePass(const UniquePtr<GraphicsContext>& context);
 			~ScreenResolvePass() override = default;
 
 			void setInputTexture(UniquePtr<Framebuffer> buffer, uint32_t index);

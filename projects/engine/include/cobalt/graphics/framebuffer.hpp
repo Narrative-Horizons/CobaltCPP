@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <cobalt/containers/smartpointers.hpp>
+
 #include <cobalt/graphics/graphicsenums.hpp>
 #include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
 #include <DiligentCore/Graphics/GraphicsEngine/interface/Texture.h>
@@ -25,7 +27,7 @@ namespace cobalt
 	class Framebuffer
 	{
 		public:
-			explicit Framebuffer(const GraphicsContext& context, const FramebufferCreateInfo& createInfo);
+			explicit Framebuffer(const UniquePtr<GraphicsContext>& context, const FramebufferCreateInfo& createInfo);
 
 			COBALT_NO_DISCARD FramebufferCreateInfo getInfo() const;
 
@@ -38,7 +40,7 @@ namespace cobalt
 		private:
 			FramebufferCreateInfo _createInfo;
 
-			const GraphicsContext& _context;
+			const UniquePtr<GraphicsContext>& _context;
 
 			std::vector<Diligent::RefCntAutoPtr<Diligent::ITexture>> _renderTargets;
 			Diligent::RefCntAutoPtr<Diligent::ITexture> _depthTarget;

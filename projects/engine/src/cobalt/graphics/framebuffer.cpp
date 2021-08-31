@@ -5,7 +5,7 @@
 
 namespace cobalt
 {
-	Framebuffer::Framebuffer(const GraphicsContext& context, const FramebufferCreateInfo& createInfo) : _context(context)
+	Framebuffer::Framebuffer(const UniquePtr<GraphicsContext>& context, const FramebufferCreateInfo& createInfo) : _context(context)
 	{
 		_createInfo = createInfo;
 
@@ -34,7 +34,7 @@ namespace cobalt
 
 			Diligent::RefCntAutoPtr<Diligent::ITexture> tex;
 
-			_context.getRenderDevice()->CreateTexture(desc, nullptr, &tex);
+			_context->getRenderDevice()->CreateTexture(desc, nullptr, &tex);
 			_renderTargets.push_back(tex);
 		}
 
@@ -47,7 +47,7 @@ namespace cobalt
 			desc.Height = _createInfo.height;
 			desc.Type = Diligent::RESOURCE_DIM_TEX_2D;
 			
-			_context.getRenderDevice()->CreateTexture(desc, nullptr, &_depthTarget);
+			_context->getRenderDevice()->CreateTexture(desc, nullptr, &_depthTarget);
 		}
 	}
 

@@ -4,7 +4,7 @@
 
 namespace cobalt
 {
-	ScreenResolvePass::ScreenResolvePass(GraphicsContext& context) : RenderPass(context, "ScreenResolvePass")
+	ScreenResolvePass::ScreenResolvePass(const UniquePtr<GraphicsContext>& context) : RenderPass(context, "ScreenResolvePass")
 	{
 		_sourceBuffer = nullptr;
 		_sourceIndex = 0;
@@ -68,27 +68,27 @@ namespace cobalt
 	{
 		const UniquePtr<Framebuffer>& renderTo = frameInfo.frameBuffer;
 
-		_context.setRenderTarget(renderTo, ResourceStateTransitionMode::TRANSITION);
+		_context->setRenderTarget(renderTo, ResourceStateTransitionMode::TRANSITION);
 
 		const float clearColor[] = { 0, 0, 0, 0 };
-		_context.clearRenderTarget(renderTo, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
-		_context.clearDepthStencil(renderTo, ClearDepthStencilFlags::DEPTH | ClearDepthStencilFlags::STENCIL, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
+		_context->clearRenderTarget(renderTo, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
+		_context->clearDepthStencil(renderTo, ClearDepthStencilFlags::DEPTH | ClearDepthStencilFlags::STENCIL, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
 
 		uint32_t offset = 0;
 
-		_context.setVertexBuffers(0, _screenBuffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
-		_context.setIndexBuffer(*_indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
+		_context->setVertexBuffers(0, _screenBuffers, &offset, ResourceStateTransitionMode::TRANSITION, SetVertexBufferFlags::RESET);
+		_context->setIndexBuffer(*_indexBuffer, 0, ResourceStateTransitionMode::TRANSITION);
 
 		_resolveShader->setData(ShaderType::PIXEL, ShaderResourceType::DYNAMIC, "tex", *_sourceBuffer, _sourceIndex);
 
-		_context.setPipelineState(*_resolveShader);
-		_context.commitShaderResources(*_resolveShader, ResourceStateTransitionMode::TRANSITION);
+		_context->setPipelineState(*_resolveShader);
+		_context->commitShaderResources(*_resolveShader, ResourceStateTransitionMode::TRANSITION);
 
 		DrawIndexedAttributes screenAttr;
 		screenAttr.indexType = ValueType::UINT32;
 		screenAttr.numIndices = 6;
 		screenAttr.flags = DrawFlags::VERIFY_ALL;
 
-		_context.drawIndexed(screenAttr);
+		_context->drawIndexed(screenAttr);
 	}
 }

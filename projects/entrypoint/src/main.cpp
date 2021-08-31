@@ -6,7 +6,6 @@
 #include <cobalt/input.hpp>
 
 #include <cobalt/entities/entity.hpp>
-#include <cobalt/events/eventmanager.hpp>
 
 #include <cobalt/graphics/graphicscontext.hpp>
 #include <cobalt/graphics/shader.hpp>
@@ -65,7 +64,7 @@ class Sandbox : BaseApplication
 				std::istreambuf_iterator<char>());
 
 			auto& context = Engine<Sandbox>::instance().createGraphicsContext(gCreateInfo);
-			uniformBuffer = MakeUnique<UniformBuffer>(*context, ShaderResourceType::STATIC, sizeof(float) * 16, "myBuffer");
+			uniformBuffer = MakeUnique<UniformBuffer>(context, ShaderResourceType::STATIC, sizeof(float) * 16, "myBuffer");
 
 			ShaderCreateInfo shaderCi;
 			shaderCi.name = "PBR";
@@ -101,7 +100,7 @@ class Sandbox : BaseApplication
 			tD.type = ShaderResourceType::DYNAMIC;
 			shaderCi.shaderResources.push_back(tD);
 
-			shader = MakeUnique<Shader>(*context, shaderCi);
+			shader = MakeUnique<Shader>(context, shaderCi);
 
 			float vertices[] = {
 				-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
@@ -114,8 +113,8 @@ class Sandbox : BaseApplication
 				2, 1, 0, 0, 3, 2
 			};
 
-			vertexBuffer = MakeUnique<VertexBuffer>(*context, vertices, sizeof(vertices));
-			indexBuffer = MakeUnique<IndexBuffer>(*context, indices, sizeof(indices));
+			vertexBuffer = MakeUnique<VertexBuffer>(context, vertices, sizeof(vertices));
+			indexBuffer = MakeUnique<IndexBuffer>(context, indices, sizeof(indices));
 			
 			buffers.push_back(vertexBuffer.get());
 
@@ -128,14 +127,17 @@ class Sandbox : BaseApplication
 			texCreateInfo.bindFlags = BindFlags::SHADER_RESOURCE;
 			texCreateInfo.accessFlags = CPUAccessFlags::WRITE;
 
-			texture = MakeUnique<Texture>(*context, *image, texCreateInfo);
+			//ResourceManager* manager = ResourceManager::get();
+			
+			//texHandle = manager->loadTexture("data/textures/shawn.png", "shawn", texCreateInfo);
+			//texture = manager->getTexture(texHandle);
 
 			FramebufferCreateInfo bufferCreateInfo;
 			bufferCreateInfo.width = 1280;
 			bufferCreateInfo.height = 720;
 			bufferCreateInfo.renderTargets.push_back(TextureFormat::BGRA8_UNORM_SRGB);
 			bufferCreateInfo.depthTarget = TextureFormat::D32_FLOAT;
-			renderBuffer = MakeUnique<Framebuffer>(*context, bufferCreateInfo);
+			renderBuffer = MakeUnique<Framebuffer>(context, bufferCreateInfo);
 
 			float screenVertices[] = {
 				-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -148,8 +150,8 @@ class Sandbox : BaseApplication
 				2, 1, 0, 0, 3, 2
 			};
 
-			screenVertexBuffer = MakeUnique<VertexBuffer>(*context, screenVertices, sizeof(screenVertices));
-			screenIndexBuffer = MakeUnique<IndexBuffer>(*context, screenIndices, sizeof(screenIndices));
+			screenVertexBuffer = MakeUnique<VertexBuffer>(context, screenVertices, sizeof(screenVertices));
+			screenIndexBuffer = MakeUnique<IndexBuffer>(context, screenIndices, sizeof(screenIndices));
 
 			std::ifstream rVFile("data/shaders/resolve_vs.hlsl");
 			std::string rVSource((std::istreambuf_iterator<char>(rVFile)),
@@ -170,7 +172,7 @@ class Sandbox : BaseApplication
 
 			resolveShaderCi.shaderResources.push_back(tD);
 
-			screenResolveShader = MakeUnique<Shader>(*context, resolveShaderCi);
+			screenResolveShader = MakeUnique<Shader>(context, resolveShaderCi);
 
 			screenBuffers.push_back(screenVertexBuffer.get());
 		}
@@ -269,6 +271,7 @@ class Sandbox : BaseApplication
 		std::vector<VertexBuffer*> buffers;
 		UniquePtr<Image> image;
 		UniquePtr<Texture> texture;
+		ResourceHandle<EResourceType::TEXTURE_2D> texHandle;
 		UniquePtr<Framebuffer> renderBuffer;
 		UniquePtr<VertexBuffer> screenVertexBuffer;
 		UniquePtr<IndexBuffer> screenIndexBuffer;

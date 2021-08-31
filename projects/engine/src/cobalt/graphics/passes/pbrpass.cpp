@@ -4,7 +4,7 @@
 
 namespace cobalt
 {
-	PBRPass::PBRPass(GraphicsContext& context) : RenderPass(context, "PBR")
+	PBRPass::PBRPass(const UniquePtr<GraphicsContext>& context) : RenderPass(context, "PBR")
 	{
 		std::ifstream vFile("data/shaders/pbr_vs.hlsl");
 		std::string vSource((std::istreambuf_iterator<char>(vFile)),
@@ -44,11 +44,11 @@ namespace cobalt
 	{
 		const UniquePtr<Framebuffer>& renderTo = frameInfo.frameBuffer;
 		
-		_context.setRenderTarget(renderTo, ResourceStateTransitionMode::TRANSITION);
+		_context->setRenderTarget(renderTo, ResourceStateTransitionMode::TRANSITION);
 
 		const float clearColor[] = { 0, 0, 0, 0 };
-		_context.clearRenderTarget(renderTo, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
-		_context.clearDepthStencil(renderTo, ClearDepthStencilFlags::DEPTH | ClearDepthStencilFlags::STENCIL, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
+		_context->clearRenderTarget(renderTo, 0, clearColor, ResourceStateTransitionMode::TRANSITION);
+		_context->clearDepthStencil(renderTo, ClearDepthStencilFlags::DEPTH | ClearDepthStencilFlags::STENCIL, 1.0f, 0, ResourceStateTransitionMode::TRANSITION);
 
 		//_impl->pbrShader->setDataArray(ShaderType::PIXEL, ShaderResourceType::DYNAMIC, "textureMap", textureArrayResource);
 	}

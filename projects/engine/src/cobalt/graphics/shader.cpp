@@ -5,7 +5,7 @@
 
 namespace cobalt
 {
-	Shader::Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo)
+	Shader::Shader(const UniquePtr<GraphicsContext>& context, ShaderCreateInfo& createInfo)
 	{
 		using namespace Diligent;
 		GraphicsPipelineStateCreateInfo graphicsPsoInfo;
@@ -45,7 +45,7 @@ namespace cobalt
 			shaderCI.Source = createInfo.vertexSource.c_str();
 
 			RefCntAutoPtr<IShader> cShader;
-			context.getRenderDevice()->CreateShader(shaderCI, &cShader);
+			context->getRenderDevice()->CreateShader(shaderCI, &cShader);
 
 			computePsoInfo.pCS = cShader;
 		}
@@ -55,8 +55,8 @@ namespace cobalt
 			if(createInfo.renderTargetFormats.empty())
 			{
 				// Use swapchain
-				createInfo.renderTargetFormats.push_back(static_cast<TextureFormat>(context.getSwapchain()->GetDesc().ColorBufferFormat));
-				createInfo.depthTargetFormat = static_cast<TextureFormat>(context.getSwapchain()->GetDesc().DepthBufferFormat);
+				createInfo.renderTargetFormats.push_back(static_cast<TextureFormat>(context->getSwapchain()->GetDesc().ColorBufferFormat));
+				createInfo.depthTargetFormat = static_cast<TextureFormat>(context->getSwapchain()->GetDesc().DepthBufferFormat);
 			}
 			
 			graphicsPsoInfo.GraphicsPipeline.NumRenderTargets = static_cast<uint8_t>(createInfo.renderTargetFormats.size())
@@ -95,7 +95,7 @@ namespace cobalt
 			shaderCi.Desc.Name = vertexShaderName.c_str();
 			shaderCi.Source = createInfo.vertexSource.c_str();
 			
-			context.getRenderDevice()->CreateShader(shaderCi, &_vShader);
+			context->getRenderDevice()->CreateShader(shaderCi, &_vShader);
 
 			graphicsPsoInfo.pVS = _vShader;
 
@@ -107,7 +107,7 @@ namespace cobalt
 				shaderCi.Desc.Name = pixelShaderName.c_str();
 				shaderCi.Source = createInfo.pixelSource.c_str();
 
-				context.getRenderDevice()->CreateShader(shaderCi, &_pShader);
+				context->getRenderDevice()->CreateShader(shaderCi, &_pShader);
 				graphicsPsoInfo.pPS = _pShader;
 			}
 		}
@@ -157,11 +157,11 @@ namespace cobalt
 
 		if(!createInfo.computeSource.empty())
 		{
-			context.getRenderDevice()->CreateComputePipelineState(computePsoInfo, &_pipeline);
+			context->getRenderDevice()->CreateComputePipelineState(computePsoInfo, &_pipeline);
 		}
 		else
 		{
-			context.getRenderDevice()->CreateGraphicsPipelineState(graphicsPsoInfo, &_pipeline);
+			context->getRenderDevice()->CreateGraphicsPipelineState(graphicsPsoInfo, &_pipeline);
 
 			if (!createInfo.shaderResources.empty())
 			{

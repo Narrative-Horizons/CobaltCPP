@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cobalt/containers/smartpointers.hpp>
+
 #include <cobalt/graphics/framebuffer.hpp>
 #include <cobalt/graphics/graphicscontext.hpp>
 
@@ -17,13 +19,13 @@ namespace cobalt
 	class RenderPass
 	{
 		public:
-			RenderPass(GraphicsContext& context, const std::string& name);
+			RenderPass(const UniquePtr<GraphicsContext>& context, const std::string& name);
 			virtual ~RenderPass() = default;
 
 			virtual void render(FrameInfo frameInfo) = 0;
 
 		protected:
-			GraphicsContext& _context;
+			const UniquePtr<GraphicsContext>& _context;
 			std::string _name;
 	};
 }

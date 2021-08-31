@@ -4,7 +4,7 @@
 
 namespace cobalt
 {
-	UniformBuffer::UniformBuffer(const GraphicsContext& context, ShaderResourceType type, const size_t size, const std::string& name) : ShaderResource(), _context(context)
+	UniformBuffer::UniformBuffer(const UniquePtr<GraphicsContext>& context, ShaderResourceType type, const size_t size, const std::string& name) : ShaderResource(), _context(context)
 	{
 		_size = size;
 		
@@ -15,7 +15,7 @@ namespace cobalt
 		ubDesc.BindFlags = Diligent::BIND_UNIFORM_BUFFER;
 		ubDesc.CPUAccessFlags = Diligent::CPU_ACCESS_WRITE;
 
-		context.getRenderDevice()->CreateBuffer(ubDesc, nullptr, &_buffer);
+		context->getRenderDevice()->CreateBuffer(ubDesc, nullptr, &_buffer);
 
 		_objectData = _buffer;
 	}
@@ -23,9 +23,9 @@ namespace cobalt
 	void UniformBuffer::setData(const void* data, ResourceStateTransitionMode transitionMode)
 	{
 		void* mappedData = nullptr;
-		_context.getImmediateContext()->MapBuffer(_buffer, Diligent::MAP_WRITE, Diligent::MAP_FLAG_DISCARD, mappedData);
+		_context->getImmediateContext()->MapBuffer(_buffer, Diligent::MAP_WRITE, Diligent::MAP_FLAG_DISCARD, mappedData);
 		memcpy(mappedData, data, _size);
-		_context.getImmediateContext()->UnmapBuffer(_buffer, Diligent::MAP_WRITE);
+		_context->getImmediateContext()->UnmapBuffer(_buffer, Diligent::MAP_WRITE);
 
 		/*contextHelper.getImmediateContext()->UpdateBuffer(_uimpl->buffer, 0, static_cast<uint32_t>(_uimpl->size), data,
 			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));*/

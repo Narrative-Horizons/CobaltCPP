@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cobalt/containers/smartpointers.hpp>
+
 #include <cobalt/graphics/renderpass.hpp>
 
 namespace cobalt
@@ -7,7 +9,7 @@ namespace cobalt
 	class PBRPass : public RenderPass
 	{
 		public:
-			explicit PBRPass(GraphicsContext& context);
+			explicit PBRPass(const UniquePtr<GraphicsContext>& context);
 			~PBRPass() override = default;
 
 			void render(FrameInfo frameInfo) override;

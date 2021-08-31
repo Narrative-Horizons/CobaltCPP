@@ -5,7 +5,7 @@
 
 namespace cobalt
 {
-	VertexBuffer::VertexBuffer(const GraphicsContext& context, const void* data, const size_t size)
+	VertexBuffer::VertexBuffer(const UniquePtr<GraphicsContext>& context, const void* data, const size_t size)
 	{
 		Diligent::BufferDesc bufferDesc;
 		bufferDesc.Name = "Vertex Buffer";
@@ -17,7 +17,7 @@ namespace cobalt
 		bufferData.pData = data;
 		bufferData.DataSize = static_cast<uint32_t>(size);
 
-		context.getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_buffer);
+		context->getRenderDevice()->CreateBuffer(bufferDesc, &bufferData, &_buffer);
 	}
 
 	Diligent::RefCntAutoPtr<Diligent::IBuffer> VertexBuffer::getBuffer() const

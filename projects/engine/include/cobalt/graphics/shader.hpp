@@ -74,7 +74,7 @@ namespace cobalt
 	class Shader
 	{
 		public:
-			Shader(const GraphicsContext& context, ShaderCreateInfo& createInfo);
+			Shader(const UniquePtr<GraphicsContext>& context, ShaderCreateInfo& createInfo);
 			~Shader() = default;
 
 			COBALT_NO_COPY_MOVE(Shader)
