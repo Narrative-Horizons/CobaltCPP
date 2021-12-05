@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include <cobalt/window.hpp>
 
 #include <cobalt/graphics/graphicsenums.hpp>
@@ -48,6 +49,10 @@ namespace cobalt
 			void resize(uint32_t width, uint32_t height);
 
 		private:
+			friend class Swapchain;
+			friend class ImageView;
+			friend class Image;
+		
 			const Window* _window;
 
 			vkb::Instance _instance;
@@ -68,5 +73,8 @@ namespace cobalt
 			VkCommandPool _transferPool;
 
 			VkPipelineCache _pipelineCache;
+
+			std::unordered_map<std::string, Image*> _images;
+			std::unordered_map<std::string, ImageView*> _imageViews;
 	};
 }

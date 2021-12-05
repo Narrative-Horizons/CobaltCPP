@@ -210,7 +210,9 @@ namespace cobalt
 
 	GraphicsContext::~GraphicsContext()
 	{
-		
+		destroy_device(_device);
+		destroy_surface(_instance, _surface);
+		destroy_instance(_instance);
 	}
 
 	GraphicsContext::GraphicsContext(GraphicsContext&& other) noexcept
