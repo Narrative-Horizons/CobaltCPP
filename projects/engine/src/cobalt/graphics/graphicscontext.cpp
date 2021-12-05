@@ -1,215 +1,236 @@
+#define VMA_IMPLEMENTATION
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+
 #include <cobalt/graphics/graphicscontext.hpp>
 
-#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
-#include <DiligentCore/Graphics/GraphicsEngineVulkan/interface/EngineFactoryVk.h>
-#include <DiligentCore/Graphics/GraphicsEngine/interface/RenderDevice.h>
-#include <DiligentCore/Graphics/GraphicsEngine/interface/DeviceContext.h>
-#include <DiligentCore/Graphics/GraphicsEngine/interface/SwapChain.h>
-#include <DiligentTools/Imgui/interface/ImGuiDiligentRenderer.hpp>
-
-#include <cobalt/graphics/shader.hpp>
-#include <cobalt/input.hpp>
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 
 namespace cobalt
 {
-	GraphicsContext::GraphicsContext(const Window& window, GraphicsContextCreateInfo createInfo)
+	GraphicsContext::GraphicsContext(const Window& window, GraphicsContextCreateInfo info)
 	{
-		using namespace Diligent;
-
-		SwapChainDesc scDesc;
-
 		_window = &window;
 
-		switch (createInfo.api)
+		vkb::InstanceBuilder bldr = vkb::InstanceBuilder()
+			.set_app_version(info.appVersion.major, info.appVersion.minor, info.appVersion.patch)
+			.set_app_name(info.appName)
+			.set_engine_version(info.engineVersion.major, info.engineVersion.minor, info.engineVersion.patch)
+			.set_engine_name(info.engineName)
+			.require_api_version(info.requiredVersion.major, info.requiredVersion.minor, info.requiredVersion.patch)
+			.enable_validation_layers(info.requireValidationLayers);
+
+		for (size_t i = 0; i < info.enabledLayerCount; ++i)
 		{
-			case GraphicsAPI::Vulkan:
-			{
-				GetEngineFactoryVkType getEngineFactoryVk = LoadGraphicsEngineVk();
-				EngineVkCreateInfo engineCi;
-
-				_deviceType = RENDER_DEVICE_TYPE_VULKAN;
-
-				IEngineFactoryVk* pFactoryVk = getEngineFactoryVk();
-				pFactoryVk->CreateDeviceAndContextsVk(engineCi, &_device, &_immediateContext);
-
-#if defined(PLATFORM_WIN32)
-				HWND hWnd = static_cast<HWND>(window.getNativeWindow());
-				if (!_swapChain && hWnd != nullptr)
-				{
-					Win32NativeWindow nativeWindow { hWnd };
-					pFactoryVk->CreateSwapChainVk(_device, _immediateContext, scDesc, nativeWindow, &_swapChain);
-				}
-#endif
-				break;
-			}
-
-			case GraphicsAPI::OpenGL: 
-			case GraphicsAPI::DX11: 
-			case GraphicsAPI::DX12: 
-			default:
-			{
-				std::cerr << "API Currently not supported" << std::endl;
-				break;
-			}
+			bldr.enable_layer(info.enabledLayers[i]);
 		}
 
-		_guiContext = ImGui::CreateContext();
-		ImGui::StyleColorsDark();
+		for (size_t i = 0; i < info.enabledExtensionCount; ++i)
+		{
+			bldr.enable_extension(info.enabledExtensions[i]);
+		}
 
-		_guiRenderer = new ImGuiDiligentRenderer(_device, TEX_FORMAT_BGRA8_UNORM_SRGB, TEX_FORMAT_D32_FLOAT, 1024, 1024);
-		_guiRenderer->CreateFontsTexture();
+		if (info.useDefaultDebugger)
+		{
+			bldr.use_default_debug_messenger();
+		}
+
+		const auto instanceResult = bldr.build();
+		if (!instanceResult)
+		{
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+
+		_instance = instanceResult.value();
+
+		// create surface
+		VkSurfaceKHR surface;
+		const VkResult surfaceResult = glfwCreateWindowSurface(_instance.instance, static_cast<GLFWwindow*>(_window->_glfwWindow), _instance.allocation_callbacks, &surface);
+
+		if (surfaceResult != VK_SUCCESS)
+		{
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+
+		_surface = surface;
+
+		VkPhysicalDeviceVulkan12Features features = {};
+		features.drawIndirectCount = true;
+
+		// select physical device
+		vkb::PhysicalDeviceSelector physicalDeviceSelector = vkb::PhysicalDeviceSelector(_instance)
+			.prefer_gpu_device_type(vkb::PreferredDeviceType::discrete)
+			.set_minimum_version(1, 2)
+			.set_desired_version(1, 2)
+			.set_required_features_12(features)
+			.set_surface(surface);
+		const auto physicalDeviceResult = physicalDeviceSelector.select();
+
+		if (!physicalDeviceResult)
+		{
+			destroy_surface(_instance, _surface);
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+		_physicalDevice = physicalDeviceResult.value();
+
+		const auto deviceResult = vkb::DeviceBuilder(_physicalDevice)
+			.build();
+
+		if (!deviceResult)
+		{
+			destroy_surface(_instance, _surface);
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+
+		_device = deviceResult.value();
+
+		auto gq = _device.get_queue(vkb::QueueType::graphics);
+		if (!gq.has_value())
+		{
+			destroy_surface(_instance, _surface);
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+		_graphicsQueue = gq.value();
+
+		auto pq = _device.get_queue(vkb::QueueType::present);
+		if (!pq.has_value())
+		{
+			destroy_surface(_instance, _surface);
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+
+		_presentQueue = pq.value();
+
+		auto cq = _device.get_queue(vkb::QueueType::compute);
+		if (!cq.has_value())
+		{
+			destroy_surface(_instance, _surface);
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+
+		_computeQueue = cq.value();
+
+		auto tq = _device.get_queue(vkb::QueueType::transfer);
+		if (!tq.has_value())
+		{
+			destroy_surface(_instance, _surface);
+			destroy_instance(_instance);
+
+			// TODO: Print error and exit program
+			exit(-1);
+		}
+
+		_tranferQueue = tq.value();
+
+		_device = deviceResult.value();
+		_functionTable = _device.make_table();
+
+		VmaAllocatorCreateInfo allocatorInfo = {};
+		allocatorInfo.flags = 0;
+		allocatorInfo.device = _device;
+
+		VmaVulkanFunctions funcs = {};
+		funcs.vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(_instance.fp_vkGetInstanceProcAddr(
+			_instance.instance, "vkGetPhysicalDeviceProperties"));
+		funcs.vkGetPhysicalDeviceMemoryProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(_instance.fp_vkGetInstanceProcAddr(
+			_instance.instance, "vkGetPhysicalDeviceMemoryProperties"));
+		funcs.vkAllocateMemory = _functionTable.fp_vkAllocateMemory;
+		funcs.vkFreeMemory = _functionTable.fp_vkFreeMemory;
+		funcs.vkMapMemory = _functionTable.fp_vkMapMemory;
+		funcs.vkUnmapMemory = _functionTable.fp_vkUnmapMemory;
+		funcs.vkFlushMappedMemoryRanges = _functionTable.fp_vkFlushMappedMemoryRanges;
+		funcs.vkInvalidateMappedMemoryRanges = _functionTable.fp_vkInvalidateMappedMemoryRanges;
+		funcs.vkBindBufferMemory = _functionTable.fp_vkBindBufferMemory;
+		funcs.vkBindImageMemory = _functionTable.fp_vkBindImageMemory;
+		funcs.vkGetBufferMemoryRequirements = _functionTable.fp_vkGetBufferMemoryRequirements;
+		funcs.vkGetImageMemoryRequirements = _functionTable.fp_vkGetImageMemoryRequirements;
+		funcs.vkCreateBuffer = _functionTable.fp_vkCreateBuffer;
+		funcs.vkDestroyBuffer = _functionTable.fp_vkDestroyBuffer;
+		funcs.vkCreateImage = _functionTable.fp_vkCreateImage;
+		funcs.vkDestroyImage = _functionTable.fp_vkDestroyImage;
+		funcs.vkCmdCopyBuffer = _functionTable.fp_vkCmdCopyBuffer;
+		funcs.vkGetBufferMemoryRequirements2KHR = _functionTable.fp_vkGetBufferMemoryRequirements2KHR;
+		funcs.vkGetImageMemoryRequirements2KHR = _functionTable.fp_vkGetImageMemoryRequirements2KHR;
+		funcs.vkBindBufferMemory2KHR = _functionTable.fp_vkBindBufferMemory2KHR;
+		funcs.vkBindImageMemory2KHR = _functionTable.fp_vkBindImageMemory2KHR;
+		funcs.vkGetPhysicalDeviceMemoryProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties2KHR>(_instance.fp_vkGetInstanceProcAddr(
+			_instance.instance, "vkGetPhysicalDeviceMemoryProperties2KHR"));
+
+		allocatorInfo.pVulkanFunctions = &funcs;
+		allocatorInfo.instance = _instance;
+		allocatorInfo.physicalDevice = _physicalDevice;
+
+		vmaCreateAllocator(&allocatorInfo, &_allocator);
+
+		VkCommandPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		poolInfo.pNext = nullptr;
+		poolInfo.queueFamilyIndex = _device.get_queue_index(vkb::QueueType::graphics).value();
+		_functionTable.createCommandPool(&poolInfo, _device.allocation_callbacks, &_graphicsPool);
+
+		poolInfo.queueFamilyIndex = _device.get_queue_index(vkb::QueueType::compute).value();
+		_functionTable.createCommandPool(&poolInfo, _device.allocation_callbacks, &_computePool);
+
+		poolInfo.queueFamilyIndex = _device.get_queue_index(vkb::QueueType::present).value();
+		_functionTable.createCommandPool(&poolInfo, _device.allocation_callbacks, &_presentPool);
+
+		poolInfo.queueFamilyIndex = _device.get_queue_index(vkb::QueueType::transfer).value();
+		_functionTable.createCommandPool(&poolInfo, _device.allocation_callbacks, &_transferPool);
+
+		VkPipelineCacheCreateInfo cacheInfo = {};
+		cacheInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		cacheInfo.flags = 0;
+		cacheInfo.pNext = nullptr;
+		cacheInfo.initialDataSize = 0;
+		cacheInfo.pInitialData = nullptr;
+
+		// TODO: Look for pipelinecache file on load, on exit save out the pipeline cache
+		_pipelineCache = VK_NULL_HANDLE;
 	}
 
 	GraphicsContext::~GraphicsContext()
 	{
-		_immediateContext->Flush();
-
-		ImGui::DestroyContext(_guiContext);
-		_guiContext = nullptr;
 		
-		_guiRenderer->InvalidateDeviceObjects();
-		delete _guiRenderer;
 	}
 
 	GraphicsContext::GraphicsContext(GraphicsContext&& other) noexcept
 	{
+		
 	}
 
 	GraphicsContext& GraphicsContext::operator=(GraphicsContext&& other) noexcept
 	{
-		_immediateContext->Flush();
-
 		return *this;
 	}
 
-	void GraphicsContext::setRenderTarget(const UniquePtr<Framebuffer>& framebuffer, ResourceStateTransitionMode transitionMode)
-	{
-		if (framebuffer == nullptr)
-		{
-			// Clear swapchain
-			auto* rtv = _swapChain->GetCurrentBackBufferRTV();
-			_immediateContext->SetRenderTargets(1, &rtv, 
-				_swapChain->GetDepthBufferDSV(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-		}
-		else
-		{
-			std::vector<Diligent::ITextureView*> views;
-			views.reserve(framebuffer->getInfo().renderTargets.size());
-			for(int index = 0; index < static_cast<int>(framebuffer->getInfo().renderTargets.size()); index++)
-			{
-				views.push_back(framebuffer->getRenderTarget(index, TextureTypeView::RENDER_TARGET));
-			}
-
-			auto x = framebuffer->getDepthTarget(TextureTypeView::DEPTH_STENCIL);
-
-			_immediateContext->SetRenderTargets(static_cast<uint32_t>(framebuffer->getInfo().renderTargets.size()),
-				views.data(),
-				x,
-				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-		}
-	}
-
-	void GraphicsContext::clearRenderTarget(const UniquePtr<Framebuffer>& framebuffer, const uint32_t index, const float* rgba, ResourceStateTransitionMode transitionMode)
-	{
-		if(framebuffer == nullptr)
-		{
-			// Clear swapchain
-			_immediateContext->ClearRenderTarget(_swapChain->GetCurrentBackBufferRTV(), rgba,
-				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-		}
-		else
-		{
-			_immediateContext->ClearRenderTarget(framebuffer->getRenderTarget(index, TextureTypeView::RENDER_TARGET), rgba,
-				static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-		}
-	}
-
-	void GraphicsContext::clearDepthStencil(const UniquePtr<Framebuffer>& framebuffer, ClearDepthStencilFlags flags, const float depth,
-	                                        const uint8_t stencil, ResourceStateTransitionMode transitionMode)
-	{
-		if(framebuffer == nullptr)
-		{
-			// Clear swapchain
-			_immediateContext->ClearDepthStencil(_swapChain->GetDepthBufferDSV(), 
-				static_cast<Diligent::CLEAR_DEPTH_STENCIL_FLAGS>(flags), depth, stencil, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-		}
-		else
-		{
-			_immediateContext->ClearDepthStencil(framebuffer->getDepthTarget(TextureTypeView::DEPTH_STENCIL),
-				static_cast<Diligent::CLEAR_DEPTH_STENCIL_FLAGS>(flags), depth, stencil, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-		}
-	}
-
-	void GraphicsContext::setPipelineState(Shader& shader)
-	{
-		_immediateContext->SetPipelineState(shader.getPipeline());
-	}
-
-	void GraphicsContext::commitShaderResources(Shader& shader, ResourceStateTransitionMode transitionMode)
-	{
-		_immediateContext->CommitShaderResources(shader.getResourceBinding(), static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-	}
-
-	void GraphicsContext::setVertexBuffers(const uint32_t start, const std::vector<VertexBuffer*>& buffers, uint32_t* offsets,
-	                                       ResourceStateTransitionMode transitionMode, SetVertexBufferFlags flags)
-	{
-		std::vector<Diligent::IBuffer*> diligentBuffers;
-		for(VertexBuffer* buf : buffers)
-		{
-			diligentBuffers.push_back(buf->getBuffer());
-		}
-		
-		_immediateContext->SetVertexBuffers(start, static_cast<uint32_t>(buffers.size()), diligentBuffers.data(), offsets,
-			static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode), static_cast<Diligent::SET_VERTEX_BUFFERS_FLAGS>(flags));
-	}
-
-	void GraphicsContext::setIndexBuffer(IndexBuffer& buffer, const uint32_t byteOffset,
-		ResourceStateTransitionMode transitionMode)
-	{
-		_immediateContext->SetIndexBuffer(buffer.getBuffer(), byteOffset, static_cast<Diligent::RESOURCE_STATE_TRANSITION_MODE>(transitionMode));
-	}
-
-	void GraphicsContext::drawIndexed(const DrawIndexedAttributes& attribs)
-	{
-		Diligent::DrawIndexedAttribs attr;
-		attr.BaseVertex = attribs.baseVertex;
-		attr.FirstIndexLocation = attribs.firstIndexLocation;
-		attr.FirstInstanceLocation = attribs.firstInstanceLocation;
-		attr.Flags = static_cast<Diligent::DRAW_FLAGS>(attribs.flags);
-		attr.IndexType = static_cast<Diligent::VALUE_TYPE>(attribs.indexType);
-		attr.NumIndices = attribs.numIndices;
-		attr.NumInstances = attribs.numInstances;
-
-		_immediateContext->DrawIndexed(attr);
-	}
 
 	void GraphicsContext::present()
 	{
-		_guiRenderer->NewFrame(1280, 720, Diligent::SURFACE_TRANSFORM_IDENTITY);
-		_guiRenderer->RenderDrawData(_immediateContext, ImGui::GetDrawData());
-		_guiRenderer->EndFrame();
-
-		_swapChain->Present(static_cast<uint32_t>(_window->vSyncEnabled()));
+		
 	}
 
 	void GraphicsContext::resize(const uint32_t width, const uint32_t height)
 	{
-		_swapChain->Resize(width, height);
+		
 	}
-
-	Diligent::RefCntAutoPtr<Diligent::IRenderDevice> GraphicsContext::getRenderDevice() const noexcept
-	{
-		return _device;
-	}
-
-	Diligent::RefCntAutoPtr<Diligent::IDeviceContext> GraphicsContext::getImmediateContext() const noexcept
-	{
-		return _immediateContext;
-	}
-
-	Diligent::RefCntAutoPtr<Diligent::ISwapChain> GraphicsContext::getSwapchain() const noexcept
-	{
-		return _swapChain;
-	}
-
 }

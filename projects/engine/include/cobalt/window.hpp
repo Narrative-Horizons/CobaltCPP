@@ -42,6 +42,8 @@ namespace cobalt
 			COBALT_NO_DISCARD void* getNativeWindow() const;
 
 		private:
+			friend class GraphicsContext;
+		
 			WindowCreateInfo _createInfo;
 			bool _isOpen;
 

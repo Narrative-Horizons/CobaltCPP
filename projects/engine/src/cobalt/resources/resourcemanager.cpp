@@ -1,7 +1,12 @@
 #include <cobalt/resources/resourcemanager.hpp>
 #include <cobalt/graphics/texture.hpp>
+#include <cobalt/graphics/mesh.hpp>
 
 #include <DiligentTools/AssetLoader/interface/GLTFLoader.hpp>
+
+#include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 namespace cobalt
 {
@@ -61,5 +66,49 @@ namespace cobalt
 	{
 		const auto res = _resources[EResourceType::TEXTURE_2D].at(handle.identifier).get();
 		return static_cast<Texture*>(res);
+	}
+
+	ResourceHandle<EResourceType::MESH> ResourceManager::loadMesh(const std::string_view path,
+		const std::string_view name)
+	{
+		const int32_t identifier = ++_resourceIdentifiers[EResourceType::MESH];
+
+		ResourceHandle<EResourceType::MESH> handle;
+		handle.identifier = identifier;
+
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(path.data(), aiProcessPreset_TargetRealtime_MaxQuality);
+		
+		std::vector<MeshVertex> verts;
+		std::vector<uint32_t> triangles;
+		
+		Mesh* mesh = new Mesh(_graphics, verts, triangles);
+
+		_resources[EResourceType::MESH][identifier] = UniquePtr<Resource>(mesh);
+		_resources[EResourceType::MESH][identifier]->name = name;
+
+		return handle;
+	}
+
+	ResourceHandle<EResourceType::MESH> ResourceManager::getMeshHandle(const std::string_view name)
+	{
+		for (auto& [indentifier, resource] : _resources[EResourceType::MESH])
+		{
+			if (resource->name == name)
+			{
+				ResourceHandle<EResourceType::MESH> handle;
+				handle.identifier = indentifier;
+
+				return handle;
+			}
+		}
+
+		return ResourceHandle<EResourceType::MESH>();
+	}
+
+	Mesh* ResourceManager::getMesh(const ResourceHandle<EResourceType::MESH> handle)
+	{
+		const auto res = _resources[EResourceType::MESH].at(handle.identifier).get();
+		return static_cast<Mesh*>(res);
 	}
 }

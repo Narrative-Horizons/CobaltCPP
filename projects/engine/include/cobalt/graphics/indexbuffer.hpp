@@ -2,9 +2,6 @@
 
 #include <cobalt/containers/smartpointers.hpp>
 
-#include <DiligentCore/Common/interface/RefCntAutoPtr.hpp>
-#include <DiligentCore/Graphics/GraphicsEngine/interface/Buffer.h>
-
 #include "cobalt/macros.hpp"
 
 namespace cobalt
@@ -16,9 +13,8 @@ namespace cobalt
 			IndexBuffer(const UniquePtr<GraphicsContext>& context, const void* data, const size_t size);
 			~IndexBuffer() = default;
 
-			COBALT_NO_DISCARD Diligent::RefCntAutoPtr<Diligent::IBuffer> getBuffer() const;
+			COBALT_NO_COPY_MOVE(IndexBuffer)
 
 		private:
-			Diligent::RefCntAutoPtr<Diligent::IBuffer> _buffer;
 	};
 }

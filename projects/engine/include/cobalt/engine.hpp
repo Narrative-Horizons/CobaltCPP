@@ -9,8 +9,6 @@
 #include <cobalt/physics/physics.hpp>
 #include <cobalt/resources/resourcemanager.hpp>
 
-#include <PxPhysicsAPI.h>
-
 namespace cobalt
 {
 	template<typename Application>
@@ -38,8 +36,7 @@ namespace cobalt
 
 			void run()
 			{
-				ResourceManager* resMan = new ResourceManager(_context);
-				_resourceManager = UniquePtr<ResourceManager>(resMan);
+				_resourceManager = MakeUnique<ResourceManager>(_context);
 				_physics = MakeUnique<Physics>();
 
 				_app->initialize();

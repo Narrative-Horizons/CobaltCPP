@@ -15,23 +15,30 @@ project("Engine")
     includedirs({
         "%{Dependencies.diligent.include}",
         "%{Dependencies.PhysX.include}",
+        "%{Dependencies.assimp.include}",
         "%{Projects.engine.include}",
         "%{NativeIncludeDirs.glfw}",
-        "src" -- private headers
+        "src", -- private headers
+        "%{NativeIncludeDirs.vkbootstrap}",
+        "%{NativeIncludeDirs.vulkan}",
+        "%{NativeIncludeDirs.vma}"
     })
 
     libdirs({
         "%{Dependencies.diligent.lib}",
-        "%{Dependencies.PhysX.lib}"
+        "%{Dependencies.PhysX.lib}",
+        "%{Dependencies.assimp.lib}"
     })
 
     postbuildcommands {
         "{COPY} %{Dependencies.diligent.bin} %{binaries}",
-        "{COPY} %{Dependencies.PhysX.bin} %{binaries}"
+        "{COPY} %{Dependencies.PhysX.bin} %{binaries}",
+        "{COPY} %{Dependencies.assimp.bin} %{binaries}"
     }
 
     links({
-        "GLFW@3.3.3"
+        "GLFW@3.3.3",
+        "vk-bootstrap"
     })
 
     filter("Debug")
@@ -87,7 +94,7 @@ project("Engine")
             "PhysXFoundation_64.lib",
             "PhysXPvdSDK_static_64.lib",
             "PhysXTask_static_64.lib",
-            "PhysXVehicle_static_64.lib"
+            "PhysXVehicle_static_64.lib",
         })
 
     filter({"system:Windows", "Debug"})
@@ -98,6 +105,10 @@ project("Engine")
             "OSDependentd.lib",
             "SPIRVd.lib",
             "spirv-cross-cored.lib",
+
+            "assimp-vc142-mtd.lib",
+            "IrrXMLd.lib",
+            "zlibstaticd.lib"
         })
 
     filter({"system:Windows", "Release"})

@@ -20,6 +20,9 @@ project("Entrypoint")
         "%{Dependencies.PhysX.include}",
         "%{NativeIncludeDirs.glfw}",
         "%{Dependencies.imgui.include}",
+        "%{NativeIncludeDirs.vkbootstrap}",
+        "%{NativeIncludeDirs.vulkan}",
+        "%{NativeIncludeDirs.vma}"
     })
 
     links({

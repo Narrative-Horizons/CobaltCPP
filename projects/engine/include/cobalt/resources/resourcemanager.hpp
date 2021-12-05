@@ -10,11 +10,14 @@
 namespace cobalt
 {
 	class Texture;
+	class Mesh;
+	
 	struct TextureCreateInfo;
 	
 	enum class EResourceType : uint32_t
 	{
-		TEXTURE_2D
+		TEXTURE_2D,
+		MESH
 	};
 
 	template<EResourceType Type>
@@ -40,6 +43,7 @@ namespace cobalt
 	class ResourceManager
 	{
 		public:
+			explicit ResourceManager(UniquePtr<GraphicsContext>& graphics);
 			~ResourceManager();
 
 			COBALT_NO_DISCARD static ResourceManager* get() noexcept;
@@ -50,14 +54,13 @@ namespace cobalt
 			ResourceHandle<EResourceType::TEXTURE_2D> getTextureHandle(const std::string_view name);
 			Texture* getTexture(const ResourceHandle<EResourceType::TEXTURE_2D> handle);
 
-			// TODO: Make private
+			ResourceHandle<EResourceType::MESH> loadMesh(const std::string_view path, const std::string_view name);
+			ResourceHandle<EResourceType::MESH> getMeshHandle(const std::string_view name);
+			Mesh* getMesh(const ResourceHandle<EResourceType::MESH> handle);
 
 		private:
 			template<typename Application>
 			friend class Engine;
-		
-			explicit ResourceManager(UniquePtr<GraphicsContext>& graphics);
-
 		
 			UniquePtr<GraphicsContext>& _graphics;
 			std::unordered_map<EResourceType, std::unordered_map<uint32_t, UniquePtr<Resource>>> _resources;
